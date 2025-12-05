@@ -43,7 +43,17 @@
         .score-n { color: #555; }     
 
         h2 { margin: 10px 0; font-size: 1.2rem; }
-        #feedback { height: 30px; font-weight: bold; margin-bottom: 5px; }
+        
+        /* Fix 2: 增加高度以容納完成訊息 */
+        #feedback { 
+            min-height: 60px; /* 確保有足夠空間顯示兩行文字 */
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* 文字置中 */
+            text-align: center;
+        }
 
         /* --- 遊戲主區域 --- */
         .game-container {
@@ -126,7 +136,7 @@
             cursor: grab;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             touch-action: none; 
-            transition: all 0.3s; /* 確保結束時能回到中央 */
+            transition: all 0.3s; 
         }
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.1); }
@@ -140,7 +150,7 @@
     <div class="scoreboard">
         <div class="score-item score-a">✅ 答對: <span id="val-a">0</span></div>
         <div class="score-item score-b">❌ 答錯: <span id="val-b">0</span></div>
-        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span> / 50</div>
+        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span></div>
     </div>
 
     <h2>🌲 ㄣㄥ魔法森林</h2>
@@ -170,15 +180,15 @@
         const draggableItem = document.getElementById('currentItem');
         const feedbackBox = document.getElementById('feedback');
         
-        const maxQuestions = 50; // 本次遊戲總題數
-        const passThreshold = 45; // 過關門檻
+        const maxQuestions = 50; 
+        const passThreshold = 45; 
 
         let countN = 0; 
         let countA = 0; 
         let countB = 0; 
 
-        let questionBank = []; // 完整的題庫
-        let currentGameQuestions = []; // 本次遊戲的 50 題
+        let questionBank = []; 
+        let currentGameQuestions = []; 
         let currentQuestionIndex = 0;
 
         // --- 初始化並開始遊戲 ---
@@ -190,13 +200,9 @@
                 return;
             }
 
-            // 1. 隨機洗牌完整的題庫
             questionBank.sort(() => Math.random() - 0.5);
-            
-            // 2. 選擇前 50 題作為本次遊戲題庫
             currentGameQuestions = questionBank.slice(0, maxQuestions);
 
-            // 3. 重設遊戲狀態
             currentQuestionIndex = 0;
             countN = 0; countA = 0; countB = 0;
             updateScoreUI();
@@ -219,7 +225,7 @@
                 
                 if (Array.isArray(loadedData) && loadedData.length >= maxQuestions) {
                     questionBank = loadedData;
-                    startGame(); // 載入成功後開始遊戲
+                    startGame(); 
                 } else {
                     throw new Error(`題庫檔案內容不足 ${maxQuestions} 題或格式不正確。`);
                 }
@@ -238,7 +244,8 @@
         function updateScoreUI() {
             document.getElementById('val-a').innerText = countA;
             document.getElementById('val-b').innerText = countB;
-            document.getElementById('val-n').innerHTML = `${countN} / ${currentGameQuestions.length}`;
+            // Fix 1: 修正總次數顯示 bug
+            document.getElementById('val-n').innerText = `${countN} / ${currentGameQuestions.length}`;
         }
 
         function loadCurrentQuestion() {
@@ -249,7 +256,10 @@
         }
 
         function checkAnswer(selectedZone) {
-            if (countN >= currentGameQuestions.length) return; // 遊戲已結束
+            if (countN >= currentGameQuestions.length) {
+                resetPosition();
+                return; 
+            }
 
             const itemSound = draggableItem.dataset.sound;
             const zoneSound = selectedZone.dataset.targetSound;
@@ -260,111 +270,4 @@
                 countA++;
                 feedbackBox.textContent = "🎉 答對了！";
                 feedbackBox.style.color = "green";
-                selectedZone.style.borderColor = "green";
-                setTimeout(() => { 
-                    selectedZone.style.borderColor = "transparent"; 
-                    nextQuestion(); 
-                }, 500);
-            } else {
-                countB++;
-                feedbackBox.textContent = "❌ 不對喔，再試試看！";
-                feedbackBox.style.color = "red";
-                selectedZone.style.borderColor = "red";
-                setTimeout(() => { selectedZone.style.borderColor = "transparent"; nextQuestion(); }, 500);
-                // 答錯後也進入下一題
-            }
-            
-            updateScoreUI(); 
-            resetPosition(); 
-        }
-
-        function nextQuestion() {
-            if (currentQuestionIndex < currentGameQuestions.length - 1) {
-                // 還有下一題
-                currentQuestionIndex++;
-                loadCurrentQuestion();
-                feedbackBox.textContent = `第 ${currentQuestionIndex + 1} 題。`;
-                feedbackBox.style.color = "#333";
-            } else {
-                // 50 題已答完
-                endGame();
-            }
-        }
-        
-        function endGame() {
-            const passed = countA >= passThreshold;
-            
-            // 顯示最終結果
-            let resultMessage = `✅ **全部 ${currentGameQuestions.length} 題已完成！**`;
-            
-            if (passed) {
-                resultMessage += `<br>🎉 **恭喜您，答對 ${countA} 題，成功過關！** (過關門檻：${passThreshold} 題)`;
-                feedbackBox.style.color = "#007bff"; 
-            } else {
-                resultMessage += `<br>😢 **挑戰失敗，答對 ${countA} 題。** (過關門檻：${passThreshold} 題)`;
-                feedbackBox.style.color = "#dc3545"; 
-            }
-            
-            feedbackBox.innerHTML = resultMessage;
-            draggableItem.querySelector('span').textContent = '🏁';
-            draggableItem.style.borderColor = passed ? '#007bff' : '#dc3545';
-        }
-
-        // --- 輔助功能 ---
-
-        function resetPosition() {
-            draggableItem.style.transform = 'translate(0px, 0px)';
-            draggableItem.dataset.x = 0;
-            draggableItem.dataset.y = 0;
-        }
-
-        // --- 拖曳事件處理 (保持不變) ---
-        draggableItem.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', e.target.dataset.sound);
-        });
-
-        document.querySelectorAll('.drop-zone').forEach(zone => {
-            zone.addEventListener('dragover', (e) => e.preventDefault());
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                checkAnswer(zone);
-            });
-        });
-
-        // 觸控事件處理 (保持不變)
-        let startX, startY, initialX, initialY;
-
-        draggableItem.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-            initialX = parseFloat(draggableItem.dataset.x) || 0;
-            initialY = parseFloat(draggableItem.dataset.y) || 0;
-            draggableItem.style.transition = 'none'; 
-        }, {passive: false});
-
-        draggableItem.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            draggableItem.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
-        }, {passive: false});
-
-        draggableItem.addEventListener('touchend', (e) => {
-            draggableItem.style.transition = 'all 0.3s'; 
-            
-            const touch = e.changedTouches[0];
-            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-            const zone = dropTarget ? dropTarget.closest('.drop-zone') : null;
-
-            if (zone) {
-                checkAnswer(zone);
-            } else {
-                resetPosition(); 
-            }
-        });
-
-    </script>
-</body>
-</html>
+                selectedZone.style.borderColor =
