@@ -178,4 +178,193 @@
         let countB = 0; 
 
         let questionBank = []; // 完整的題庫
-        let currentGameQuestions = []; // 本
+        let currentGameQuestions = []; // 本次遊戲的 50 題
+        let currentQuestionIndex = 0;
+
+        // --- 初始化並開始遊戲 ---
+        function startGame() {
+            if (questionBank.length < maxQuestions) {
+                feedbackBox.textContent = `❌ 題庫不足 ${maxQuestions} 題，請增加 questions.json 內容。`;
+                feedbackBox.style.color = "red";
+                draggableItem.querySelector('span').textContent = '⚠️';
+                return;
+            }
+
+            // 1. 隨機洗牌完整的題庫
+            questionBank.sort(() => Math.random() - 0.5);
+            
+            // 2. 選擇前 50 題作為本次遊戲題庫
+            currentGameQuestions = questionBank.slice(0, maxQuestions);
+
+            // 3. 重設遊戲狀態
+            currentQuestionIndex = 0;
+            countN = 0; countA = 0; countB = 0;
+            updateScoreUI();
+            loadCurrentQuestion();
+            
+            feedbackBox.textContent = `✅ 題庫載入成功！開始 ${maxQuestions} 題挑戰！`;
+            feedbackBox.style.color = "green";
+        }
+        
+        async function loadQuestionBank() {
+            feedbackBox.textContent = "正在從伺服器載入題庫...";
+            draggableItem.querySelector('span').textContent = '讀';
+            
+            try {
+                const response = await fetch('questions.json'); 
+                if (!response.ok) {
+                    throw new Error(`無法載入檔案，狀態碼: ${response.status}`);
+                }
+                const loadedData = await response.json();
+                
+                if (Array.isArray(loadedData) && loadedData.length >= maxQuestions) {
+                    questionBank = loadedData;
+                    startGame(); // 載入成功後開始遊戲
+                } else {
+                    throw new Error(`題庫檔案內容不足 ${maxQuestions} 題或格式不正確。`);
+                }
+            } catch (error) {
+                console.error("載入題庫時發生錯誤:", error);
+                feedbackBox.textContent = `❌ 載入錯誤！請檢查 questions.json 檔案。`;
+                feedbackBox.style.color = "red";
+                draggableItem.querySelector('span').textContent = '錯';
+            }
+        }
+        
+        loadQuestionBank();
+
+        // --- 遊戲邏輯 ---
+
+        function updateScoreUI() {
+            document.getElementById('val-a').innerText = countA;
+            document.getElementById('val-b').innerText = countB;
+            document.getElementById('val-n').innerHTML = `${countN} / ${currentGameQuestions.length}`;
+        }
+
+        function loadCurrentQuestion() {
+            if (currentGameQuestions.length === 0 || currentQuestionIndex >= currentGameQuestions.length) return;
+            const q = currentGameQuestions[currentQuestionIndex];
+            draggableItem.querySelector('span').textContent = q.word;
+            draggableItem.dataset.sound = q.sound;
+        }
+
+        function checkAnswer(selectedZone) {
+            if (countN >= currentGameQuestions.length) return; // 遊戲已結束
+
+            const itemSound = draggableItem.dataset.sound;
+            const zoneSound = selectedZone.dataset.targetSound;
+
+            countN++; 
+
+            if (itemSound === zoneSound) {
+                countA++;
+                feedbackBox.textContent = "🎉 答對了！";
+                feedbackBox.style.color = "green";
+                selectedZone.style.borderColor = "green";
+                setTimeout(() => { 
+                    selectedZone.style.borderColor = "transparent"; 
+                    nextQuestion(); 
+                }, 500);
+            } else {
+                countB++;
+                feedbackBox.textContent = "❌ 不對喔，再試試看！";
+                feedbackBox.style.color = "red";
+                selectedZone.style.borderColor = "red";
+                setTimeout(() => { selectedZone.style.borderColor = "transparent"; nextQuestion(); }, 500);
+                // 答錯後也進入下一題
+            }
+            
+            updateScoreUI(); 
+            resetPosition(); 
+        }
+
+        function nextQuestion() {
+            if (currentQuestionIndex < currentGameQuestions.length - 1) {
+                // 還有下一題
+                currentQuestionIndex++;
+                loadCurrentQuestion();
+                feedbackBox.textContent = `第 ${currentQuestionIndex + 1} 題。`;
+                feedbackBox.style.color = "#333";
+            } else {
+                // 50 題已答完
+                endGame();
+            }
+        }
+        
+        function endGame() {
+            const passed = countA >= passThreshold;
+            
+            // 顯示最終結果
+            let resultMessage = `✅ **全部 ${currentGameQuestions.length} 題已完成！**`;
+            
+            if (passed) {
+                resultMessage += `<br>🎉 **恭喜您，答對 ${countA} 題，成功過關！** (過關門檻：${passThreshold} 題)`;
+                feedbackBox.style.color = "#007bff"; 
+            } else {
+                resultMessage += `<br>😢 **挑戰失敗，答對 ${countA} 題。** (過關門檻：${passThreshold} 題)`;
+                feedbackBox.style.color = "#dc3545"; 
+            }
+            
+            feedbackBox.innerHTML = resultMessage;
+            draggableItem.querySelector('span').textContent = '🏁';
+            draggableItem.style.borderColor = passed ? '#007bff' : '#dc3545';
+        }
+
+        // --- 輔助功能 ---
+
+        function resetPosition() {
+            draggableItem.style.transform = 'translate(0px, 0px)';
+            draggableItem.dataset.x = 0;
+            draggableItem.dataset.y = 0;
+        }
+
+        // --- 拖曳事件處理 (保持不變) ---
+        draggableItem.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.dataset.sound);
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => e.preventDefault());
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                checkAnswer(zone);
+            });
+        });
+
+        // 觸控事件處理 (保持不變)
+        let startX, startY, initialX, initialY;
+
+        draggableItem.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            initialX = parseFloat(draggableItem.dataset.x) || 0;
+            initialY = parseFloat(draggableItem.dataset.y) || 0;
+            draggableItem.style.transition = 'none'; 
+        }, {passive: false});
+
+        draggableItem.addEventListener('touchmove', (e) => {
+            e.preventDefault(); 
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            draggableItem.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
+        }, {passive: false});
+
+        draggableItem.addEventListener('touchend', (e) => {
+            draggableItem.style.transition = 'all 0.3s'; 
+            
+            const touch = e.changedTouches[0];
+            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            const zone = dropTarget ? dropTarget.closest('.drop-zone') : null;
+
+            if (zone) {
+                checkAnswer(zone);
+            } else {
+                resetPosition(); 
+            }
+        });
+
+    </script>
+</body>
+</html>
