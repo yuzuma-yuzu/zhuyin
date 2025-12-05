@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ㄣㄥ魔法森林 - 自動載入版</title>
+    <title>ㄣㄥ魔法森林 - 50題挑戰版</title>
     <style>
         body {
             font-family: 'Microsoft JhengHei', sans-serif;
@@ -14,7 +14,6 @@
             overscroll-behavior: none; 
         }
 
-        /* 頂部控制列已移除手動載入按鈕 */
         .controls {
             width: 90%;
             max-width: 800px;
@@ -22,7 +21,7 @@
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            height: 0; /* 移除空間 */
+            height: 0; 
         }
 
         /* --- 計分板 --- */
@@ -44,7 +43,7 @@
         .score-n { color: #555; }     
 
         h2 { margin: 10px 0; font-size: 1.2rem; }
-        #feedback { height: 30px; color: #d9534f; font-weight: bold; margin-bottom: 5px; }
+        #feedback { height: 30px; font-weight: bold; margin-bottom: 5px; }
 
         /* --- 遊戲主區域 --- */
         .game-container {
@@ -127,6 +126,7 @@
             cursor: grab;
             box-shadow: 0 4px 10px rgba(0,0,0,0.2);
             touch-action: none; 
+            transition: all 0.3s; /* 確保結束時能回到中央 */
         }
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.1); }
@@ -135,13 +135,12 @@
 </head>
 <body>
 
-    <div class="controls">
-        </div>
+    <div class="controls"></div>
 
     <div class="scoreboard">
         <div class="score-item score-a">✅ 答對: <span id="val-a">0</span></div>
         <div class="score-item score-b">❌ 答錯: <span id="val-b">0</span></div>
-        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span></div>
+        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span> / 50</div>
     </div>
 
     <h2>🌲 ㄣㄥ魔法森林</h2>
@@ -171,161 +170,12 @@
         const draggableItem = document.getElementById('currentItem');
         const feedbackBox = document.getElementById('feedback');
         
+        const maxQuestions = 50; // 本次遊戲總題數
+        const passThreshold = 45; // 過關門檻
+
         let countN = 0; 
         let countA = 0; 
         let countB = 0; 
 
-        // 題庫從網路載入，預設為空
-        let questionBank = [];
-        let currentQuestionIndex = 0;
-
-        // --- 新增自動載入功能 ---
-        async function loadQuestionBank() {
-            feedbackBox.textContent = "正在從伺服器載入題庫...";
-            draggableItem.querySelector('span').textContent = '讀';
-            
-            try {
-                // 使用相對路徑從伺服器（GitHub Pages）獲取檔案
-                const response = await fetch('questions.json'); 
-                if (!response.ok) {
-                    throw new Error(`無法載入檔案，狀態碼: ${response.status}`);
-                }
-                const loadedData = await response.json();
-                
-                if (Array.isArray(loadedData) && loadedData.length > 0) {
-                    questionBank = loadedData;
-                    // 洗牌並開始遊戲
-                    questionBank = questionBank.sort(() => Math.random() - 0.5);
-                    
-                    // 初始化遊戲狀態
-                    currentQuestionIndex = 0;
-                    countN = 0; countA = 0; countB = 0;
-                    updateScoreUI();
-                    loadCurrentQuestion();
-                    
-                    feedbackBox.textContent = `✅ 題庫載入成功！共有 ${questionBank.length} 題，開始遊戲！`;
-                    feedbackBox.style.color = "green";
-                } else {
-                    throw new Error("題庫檔案內容為空或格式不正確。");
-                }
-            } catch (error) {
-                console.error("載入題庫時發生錯誤:", error);
-                feedbackBox.textContent = `❌ 載入錯誤！請檢查 Console 或 questions.json 檔案。`;
-                feedbackBox.style.color = "red";
-                draggableItem.querySelector('span').textContent = '錯';
-            }
-        }
-        
-        // 頁面啟動時自動載入題庫
-        loadQuestionBank();
-
-        function updateScoreUI() {
-            document.getElementById('val-a').innerText = countA;
-            document.getElementById('val-b').innerText = countB;
-            document.getElementById('val-n').innerText = countN;
-        }
-
-        function loadCurrentQuestion() {
-            if (questionBank.length === 0) return;
-            const q = questionBank[currentQuestionIndex];
-            draggableItem.querySelector('span').textContent = q.word;
-            draggableItem.dataset.sound = q.sound;
-        }
-
-        function checkAnswer(selectedZone) {
-            if (questionBank.length === 0) {
-                 feedbackBox.textContent = "請等待題庫載入完成！";
-                 feedbackBox.style.color = "orange";
-                 resetPosition();
-                 return;
-            }
-
-            const itemSound = draggableItem.dataset.sound;
-            const zoneSound = selectedZone.dataset.targetSound;
-
-            countN++; 
-
-            if (itemSound === zoneSound) {
-                countA++;
-                feedbackBox.textContent = "🎉 答對了！";
-                feedbackBox.style.color = "green";
-                selectedZone.style.borderColor = "green";
-                setTimeout(() => { 
-                    selectedZone.style.borderColor = "transparent"; 
-                    nextQuestion(); 
-                }, 500);
-            } else {
-                countB++;
-                feedbackBox.textContent = "❌ 不對喔，再試試看！";
-                feedbackBox.style.color = "red";
-                selectedZone.style.borderColor = "red";
-                setTimeout(() => { selectedZone.style.borderColor = "transparent"; }, 500);
-            }
-            
-            updateScoreUI(); 
-            resetPosition(); 
-        }
-
-        function nextQuestion() {
-            currentQuestionIndex = (currentQuestionIndex + 1) % questionBank.length;
-            loadCurrentQuestion();
-            feedbackBox.textContent = "下一題！";
-            feedbackBox.style.color = "#333";
-        }
-
-        function resetPosition() {
-            draggableItem.style.transform = 'translate(0px, 0px)';
-            draggableItem.dataset.x = 0;
-            draggableItem.dataset.y = 0;
-        }
-
-        // --- 滑鼠拖曳 (電腦版) ---
-        draggableItem.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', e.target.dataset.sound);
-        });
-
-        document.querySelectorAll('.drop-zone').forEach(zone => {
-            zone.addEventListener('dragover', (e) => e.preventDefault());
-            zone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                checkAnswer(zone);
-            });
-        });
-
-        // --- 觸控拖曳 (iPad/手機版) ---
-        let startX, startY, initialX, initialY;
-
-        draggableItem.addEventListener('touchstart', (e) => {
-            const touch = e.touches[0];
-            startX = touch.clientX;
-            startY = touch.clientY;
-            initialX = parseFloat(draggableItem.dataset.x) || 0;
-            initialY = parseFloat(draggableItem.dataset.y) || 0;
-            draggableItem.style.transition = 'none'; 
-        }, {passive: false});
-
-        draggableItem.addEventListener('touchmove', (e) => {
-            e.preventDefault(); 
-            const touch = e.touches[0];
-            const dx = touch.clientX - startX;
-            const dy = touch.clientY - startY;
-            draggableItem.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
-        }, {passive: false});
-
-        draggableItem.addEventListener('touchend', (e) => {
-            draggableItem.style.transition = 'all 0.3s'; 
-            
-            const touch = e.changedTouches[0];
-            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-            const zone = dropTarget ? dropTarget.closest('.drop-zone') : null;
-
-            if (zone) {
-                checkAnswer(zone);
-            } else {
-                resetPosition(); 
-            }
-        });
-
-    </script>
-</body>
-</html>
+        let questionBank = []; // 完整的題庫
+        let currentGameQuestions = []; // 本
