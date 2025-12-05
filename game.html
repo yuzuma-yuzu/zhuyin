@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ㄣㄥ魔法森林 - 角色圖片版</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f8ff;
+            overscroll-behavior: none; 
+        }
+
+        /* --- 頂部控制列 --- */
+        .controls {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+        }
+
+        #fileInput { display: none; }
+
+        .custom-file-upload {
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 6px 12px;
+            cursor: pointer;
+            background: #fff;
+            border-radius: 5px;
+            font-size: 14px;
+            color: #555;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .custom-file-upload:active { background: #eee; }
+
+        /* --- 計分板 --- */
+        .scoreboard {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .score-item { display: flex; align-items: center; gap: 5px; }
+        .score-a { color: #2e7d32; } 
+        .score-b { color: #c62828; } 
+        .score-n { color: #555; }     
+
+        h2 { margin: 10px 0; font-size: 1.2rem; }
+        #feedback { height: 30px; color: #d9534f; font-weight: bold; margin-bottom: 5px; }
+
+        /* --- 遊戲主區域 --- */
+        .game-container {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            height: 350px;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            background: white;
+            border-radius: 15px;
+            user-select: none; 
+            position: relative;
+        }
+
+        .drop-zone {
+            width: 45%; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; /* 將文字推到底部 */
+            border-radius: 10px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            background-color: #fafafa;
+            
+            /* 讓角色圖片顯示在背景 */
+            background-repeat: no-repeat;
+            background-size: contain; /* 確保圖片縮放以適應容器 */
+            background-position: center top; /* 將圖片放在上方 */
+        }
+        
+        /* ---------------------------------------------------- */
+        /* ★★★ 圖片實作區域 (重要！請替換 BASE64 字串) ★★★ */
+        /* ---------------------------------------------------- */
+
+        #zone-en { 
+            /* 移除背景色，改用圖片 */
+            background-color: transparent; 
+            /* 請將 'BASE64_CODE_FOR_EN' 替換為小恩圖片的 Base64 字串 */
+            background-image: url('images/en_char.png');
+        }
+
+        #zone-eng { 
+            /* 移除背景色，改用圖片 */
+            background-color: transparent;
+            /* 請將 'BASE64_CODE_FOR_ENG' 替換為碰碰圖片的 Base64 字串 */
+            background-image: url('images/eng_char.png');
+        }
+        
+        /* ---------------------------------------------------- */
+
+        .drop-zone.drag-over {
+            border-color: #ffeb3b;
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+        
+        /* 將文字標籤放在底部 */
+        .character-label {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        .item-spawn-area {
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 10;
+        }
+
+        .draggable-item {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 5px solid #4caf50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            font-weight: bold;
+            color: #333;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            touch-action: none; 
+        }
+        
+        .draggable-item:active { cursor: grabbing; transform: scale(1.1); }
+
+    </style>
+</head>
+<body>
+
+    <div class="controls">
+        <label for="fileInput" class="custom-file-upload">
+            📂 載入題庫檔案 (.json)
+        </label>
+        <input type="file" id="fileInput" accept=".json, .txt">
+    </div>
+
+    <div class="scoreboard">
+        <div class="score-item score-a">✅ 答對: <span id="val-a">0</span></div>
+        <div class="score-item score-b">❌ 答錯: <span id="val-b">0</span></div>
+        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span></div>
+    </div>
+
+    <h2>🌲 ㄣㄥ魔法森林</h2>
+    <div id="feedback">請選擇題庫檔案，或直接開始 (預設題庫)</div>
+
+    <div class="game-container">
+        <div class="drop-zone" id="zone-en" data-target-sound="en">
+            <div class="character-label">
+                <h3>⚡ 小恩 (ㄣ)</h3>
+            </div>
+        </div>
+
+        <div class="item-spawn-area">
+            <div class="draggable-item" id="currentItem" draggable="true" data-sound="en">
+                <span>預</span>
+            </div>
+        </div>
+
+        <div class="drop-zone" id="zone-eng" data-target-sound="eng">
+             <div class="character-label">
+                <h3>🔔 碰碰 (ㄥ)</h3>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const draggableItem = document.getElementById('currentItem');
+        const feedbackBox = document.getElementById('feedback');
+        const fileInput = document.getElementById('fileInput');
+        
+        let countN = 0; 
+        let countA = 0; 
+        let countB = 0; 
+
+        // 預設題庫
+        let questionBank = [
+            { word: '範', sound: 'en' },
+            { word: '例', sound: 'en' }
+        ];
+        
+        let currentQuestionIndex = 0;
+
+        // --- 檔案讀取功能 ---
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const loadedData = JSON.parse(e.target.result);
+                    if (Array.isArray(loadedData) && loadedData.length > 0) {
+                        questionBank = loadedData;
+                        questionBank = questionBank.sort(() => Math.random() - 0.5);
+                        
+                        currentQuestionIndex = 0;
+                        countN = 0; countA = 0; countB = 0;
+                        updateScoreUI();
+                        loadCurrentQuestion();
+                        
+                        feedbackBox.textContent = "✅ 題庫載入成功！共有 " + questionBank.length + " 題";
+                        feedbackBox.style.color = "green";
+                    } else {
+                        throw new Error("格式錯誤");
+                    }
+                } catch (err) {
+                    alert("檔案格式錯誤！請確認是正確的 JSON 檔案。\n" + err);
+                }
+            };
+            reader.readAsText(file);
+        });
+
+        function updateScoreUI() {
+            document.getElementById('val-a').innerText = countA;
+            document.getElementById('val-b').innerText = countB;
+            document.getElementById('val-n').innerText = countN;
+        }
+
+        function loadCurrentQuestion() {
+            if (questionBank.length === 0) return;
+            const q = questionBank[currentQuestionIndex];
+            draggableItem.querySelector('span').textContent = q.word;
+            draggableItem.dataset.sound = q.sound;
+        }
+
+        loadCurrentQuestion();
+
+        function checkAnswer(selectedZone) {
+            const itemSound = draggableItem.dataset.sound;
+            const zoneSound = selectedZone.dataset.targetSound;
+
+            countN++; 
+
+            if (itemSound === zoneSound) {
+                countA++;
+                feedbackBox.textContent = "🎉 答對了！";
+                feedbackBox.style.color = "green";
+                // 答對時給予邊框高亮
+                selectedZone.style.borderColor = "green";
+                setTimeout(() => { 
+                    selectedZone.style.borderColor = "transparent"; 
+                    nextQuestion(); 
+                }, 500);
+            } else {
+                countB++;
+                feedbackBox.textContent = "❌ 不對喔，再試試看！";
+                feedbackBox.style.color = "red";
+                 // 答錯時給予邊框高亮
+                selectedZone.style.borderColor = "red";
+                setTimeout(() => { selectedZone.style.borderColor = "transparent"; }, 500);
+            }
+            
+            updateScoreUI(); 
+            resetPosition(); 
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex = (currentQuestionIndex + 1) % questionBank.length;
+            loadCurrentQuestion();
+            feedbackBox.textContent = "下一題！";
+            feedbackBox.style.color = "#333";
+        }
+
+        function resetPosition() {
+            draggableItem.style.transform = 'translate(0px, 0px)';
+            draggableItem.dataset.x = 0;
+            draggableItem.dataset.y = 0;
+        }
+
+        // --- 滑鼠拖曳 (電腦版) ---
+        draggableItem.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', e.target.dataset.sound);
+        });
+
+        document.querySelectorAll('.drop-zone').forEach(zone => {
+            zone.addEventListener('dragover', (e) => e.preventDefault());
+            zone.addEventListener('drop', (e) => {
+                e.preventDefault();
+                checkAnswer(zone);
+            });
+        });
+
+        // --- 觸控拖曳 (iPad/手機版) ---
+        let startX, startY, initialX, initialY;
+
+        draggableItem.addEventListener('touchstart', (e) => {
+            const touch = e.touches[0];
+            startX = touch.clientX;
+            startY = touch.clientY;
+            initialX = parseFloat(draggableItem.dataset.x) || 0;
+            initialY = parseFloat(draggableItem.dataset.y) || 0;
+            draggableItem.style.transition = 'none'; 
+        }, {passive: false});
+
+        draggableItem.addEventListener('touchmove', (e) => {
+            e.preventDefault(); 
+            const touch = e.touches[0];
+            const dx = touch.clientX - startX;
+            const dy = touch.clientY - startY;
+            draggableItem.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
+        }, {passive: false});
+
+        draggableItem.addEventListener('touchend', (e) => {
+            draggableItem.style.transition = 'all 0.3s'; 
+            
+            const touch = e.changedTouches[0];
+            const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            const zone = dropTarget ? dropTarget.closest('.drop-zone') : null;
+
+            if (zone) {
+                checkAnswer(zone);
+            } else {
+                resetPosition(); 
+            }
+        });
+
+    </script>
+</body>
+</html>

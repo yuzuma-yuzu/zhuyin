@@ -1,0 +1,402 @@
+[
+  {
+    "word": "門",
+    "sound": "en"
+  },
+  {
+    "word": "盆",
+    "sound": "en"
+  },
+  {
+    "word": "分",
+    "sound": "en"
+  },
+  {
+    "word": "雲",
+    "sound": "en"
+  },
+  {
+    "word": "裙",
+    "sound": "en"
+  },
+  {
+    "word": "輪",
+    "sound": "en"
+  },
+  {
+    "word": "春",
+    "sound": "en"
+  },
+  {
+    "word": "孫",
+    "sound": "en"
+  },
+  {
+    "word": "村",
+    "sound": "en"
+  },
+  {
+    "word": "存",
+    "sound": "en"
+  },
+  {
+    "word": "尊",
+    "sound": "en"
+  },
+  {
+    "word": "吞",
+    "sound": "en"
+  },
+  {
+    "word": "嫩",
+    "sound": "en"
+  },
+  {
+    "word": "溫",
+    "sound": "en"
+  },
+  {
+    "word": "文",
+    "sound": "en"
+  },
+  {
+    "word": "聞",
+    "sound": "en"
+  },
+  {
+    "word": "穩",
+    "sound": "en"
+  },
+  {
+    "word": "問",
+    "sound": "en"
+  },
+  {
+    "word": "人",
+    "sound": "en"
+  },
+  {
+    "word": "認",
+    "sound": "en"
+  },
+  {
+    "word": "燈",
+    "sound": "eng"
+  },
+  {
+    "word": "疼",
+    "sound": "eng"
+  },
+  {
+    "word": "等",
+    "sound": "eng"
+  },
+  {
+    "word": "能",
+    "sound": "eng"
+  },
+  {
+    "word": "冷",
+    "sound": "eng"
+  },
+  {
+    "word": "增",
+    "sound": "eng"
+  },
+  {
+    "word": "層",
+    "sound": "eng"
+  },
+  {
+    "word": "夢",
+    "sound": "eng"
+  },
+  {
+    "word": "猛",
+    "sound": "eng"
+  },
+  {
+    "word": "盟",
+    "sound": "eng"
+  },
+  {
+    "word": "風",
+    "sound": "eng"
+  },
+  {
+    "word": "鳳",
+    "sound": "eng"
+  },
+  {
+    "word": "碰",
+    "sound": "eng"
+  },
+  {
+    "word": "朋",
+    "sound": "eng"
+  },
+  {
+    "word": "鵬",
+    "sound": "eng"
+  },
+  {
+    "word": "翁",
+    "sound": "eng"
+  },
+  {
+    "word": "嗡",
+    "sound": "eng"
+  },
+  {
+    "word": "中",
+    "sound": "eng"
+  },
+  {
+    "word": "鐘",
+    "sound": "eng"
+  },
+  {
+    "word": "腫",
+    "sound": "eng"
+  },
+  {
+    "word": "種",
+    "sound": "eng"
+  },
+  {
+    "word": "衝",
+    "sound": "eng"
+  },
+  {
+    "word": "蟲",
+    "sound": "eng"
+  },
+  {
+    "word": "重",
+    "sound": "eng"
+  },
+  {
+    "word": "寵",
+    "sound": "eng"
+  },
+  {
+    "word": "榮",
+    "sound": "eng"
+  },
+  {
+    "word": "容",
+    "sound": "eng"
+  },
+  {
+    "word": "融",
+    "sound": "eng"
+  },
+  {
+    "word": "龍",
+    "sound": "eng"
+  },
+  {
+    "word": "籠",
+    "sound": "eng"
+  },
+  {
+    "word": "弄",
+    "sound": "eng"
+  },
+  {
+    "word": "農",
+    "sound": "eng"
+  },
+  {
+    "word": "濃",
+    "sound": "eng"
+  },
+  {
+    "word": "紅",
+    "sound": "eng"
+  },
+  {
+    "word": "宏",
+    "sound": "eng"
+  },
+  {
+    "word": "任",
+    "sound": "en"
+  },
+  {
+    "word": "忍",
+    "sound": "en"
+  },
+  {
+    "word": "銀",
+    "sound": "en"
+  },
+  {
+    "word": "印",
+    "sound": "en"
+  },
+  {
+    "word": "音",
+    "sound": "en"
+  },
+  {
+    "word": "因",
+    "sound": "en"
+  },
+  {
+    "word": "金",
+    "sound": "en"
+  },
+  {
+    "word": "心",
+    "sound": "en"
+  },
+  {
+    "word": "新",
+    "sound": "en"
+  },
+  {
+    "word": "信",
+    "sound": "en"
+  },
+  {
+    "word": "親",
+    "sound": "en"
+  },
+  {
+    "word": "緊",
+    "sound": "en"
+  },
+  {
+    "word": "進",
+    "sound": "en"
+  },
+  {
+    "word": "近",
+    "sound": "en"
+  },
+  {
+    "word": "林",
+    "sound": "en"
+  },
+  {
+    "word": "鄰",
+    "sound": "en"
+  },
+  {
+    "word": "拼",
+    "sound": "en"
+  },
+  {
+    "word": "民",
+    "sound": "en"
+  },
+  {
+    "word": "品",
+    "sound": "en"
+  },
+  {
+    "word": "您",
+    "sound": "en"
+  },
+  {
+    "word": "跟",
+    "sound": "en"
+  },
+  {
+    "word": "根",
+    "sound": "en"
+  },
+  {
+    "word": "很",
+    "sound": "en"
+  },
+  {
+    "word": "痕",
+    "sound": "en"
+  },
+  {
+    "word": "真",
+    "sound": "en"
+  },
+  {
+    "word": "針",
+    "sound": "en"
+  },
+  {
+    "word": "枕",
+    "sound": "en"
+  },
+  {
+    "word": "陣",
+    "sound": "en"
+  },
+  {
+    "word": "深",
+    "sound": "en"
+  },
+  {
+    "word": "身",
+    "sound": "en"
+  },
+  {
+    "word": "哄",
+    "sound": "eng"
+  },
+  {
+    "word": "空",
+    "sound": "eng"
+  },
+  {
+    "word": "孔",
+    "sound": "eng"
+  },
+  {
+    "word": "恐",
+    "sound": "eng"
+  },
+  {
+    "word": "控",
+    "sound": "eng"
+  },
+  {
+    "word": "東",
+    "sound": "eng"
+  },
+  {
+    "word": "冬",
+    "sound": "eng"
+  },
+  {
+    "word": "懂",
+    "sound": "eng"
+  },
+  {
+    "word": "動",
+    "sound": "eng"
+  },
+  {
+    "word": "通",
+    "sound": "eng"
+  },
+  {
+    "word": "痛",
+    "sound": "eng"
+  },
+  {
+    "word": "同",
+    "sound": "eng"
+  },
+  {
+    "word": "桶",
+    "sound": "eng"
+  },
+  {
+    "word": "松",
+    "sound": "eng"
+  },
+  {
+    "word": "送",
+    "sound": "eng"
+  }
+]
