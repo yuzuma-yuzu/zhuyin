@@ -12,18 +12,63 @@
             align-items: center;
             background-color: #f0f8ff;
             overscroll-behavior: none; 
-            padding-bottom: 50px; /* 預留底部空間給錯題本 */
+            padding-bottom: 50px; 
         }
 
-        .controls {
-            width: 90%;
-            max-width: 800px;
-            margin-top: 15px;
+        h2 { margin: 15px 0 10px 0; font-size: 1.4rem; color: #333; }
+
+        /* --- 開始選單 --- */
+        #start-menu {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(240, 248, 255, 0.95);
             display: flex;
-            justify-content: flex-end;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            height: 0; 
+            z-index: 1000;
         }
+
+        .menu-card {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            text-align: center;
+            max-width: 90%;
+            width: 350px;
+        }
+
+        .menu-btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: white;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+
+        .menu-btn:active { transform: scale(0.95); }
+        .menu-btn:hover { background-color: #43a047; }
+        .menu-btn:disabled { background-color: #ccc; cursor: not-allowed; }
+
+        /* --- 遊戲主體 (預設隱藏) --- */
+        #game-wrapper {
+            display: none; /* 選完題數才顯示 */
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        /* 隱藏 class */
+        .hidden { display: none !important; }
 
         /* --- 計分板 --- */
         .scoreboard {
@@ -43,8 +88,6 @@
         .score-b { color: #c62828; } 
         .score-n { color: #555; }     
 
-        h2 { margin: 10px 0; font-size: 1.2rem; }
-        
         /* 遊戲說明樣式 */
         #instructions {
             font-size: 0.9em;
@@ -99,7 +142,6 @@
             background-position: center top; 
         }
         
-        /* 圖片實作區域 */
         #zone-en { 
             background-color: transparent; 
             background-image: url('images/en_char.png'); 
@@ -153,7 +195,7 @@
         
         .draggable-item:active { cursor: grabbing; transform: scale(1.1); }
 
-        /* --- 錯題本樣式 (新增) --- */
+        /* --- 錯題本樣式 --- */
         #mistake-list {
             width: 90%;
             max-width: 800px;
@@ -162,7 +204,7 @@
             background-color: #fff3f3;
             border: 2px solid #ffcdd2;
             border-radius: 10px;
-            display: none; /* 預設隱藏，結束時顯示 */
+            display: none; 
         }
 
         #mistake-list h3 {
@@ -199,120 +241,153 @@
 </head>
 <body>
 
-    <div class="controls"></div>
-
-    <div class="scoreboard">
-        <div class="score-item score-a">✅ 答對: <span id="val-a">0</span></div>
-        <div class="score-item score-b">❌ 答錯: <span id="val-b">0</span></div>
-        <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span></div>
-    </div>
-
-    <h2>🌲 ㄣㄥ魔法森林</h2>
-    
-    <p id="instructions">
-        💡 **遊戲說明：** 請將畫面中央的字**拖曳**到右邊正確發音的區域中。
-    </p>
-
-    <div id="feedback">正在載入題庫...</div>
-
-    <div class="game-container">
-        <div class="drop-zone" id="zone-en" data-target-sound="en">
-            <div class="character-label">
-                <h3>⚡ 小恩 (ㄣ)</h3>
-            </div>
-        </div>
-
-        <div class="item-spawn-area">
-            <div class="draggable-item" id="currentItem" draggable="true" data-sound="en">
-                <span>載</span>
-            </div>
-        </div>
-
-        <div class="drop-zone" id="zone-eng" data-target-sound="eng">
-            <div class="character-label">
-                <h3>🔔 碰碰 (ㄥ)</h3>
+    <div id="start-menu">
+        <div class="menu-card">
+            <h2>🌲 ㄣㄥ魔法森林</h2>
+            <p id="loading-text">正在載入題庫...</p>
+            
+            <div id="level-selection" class="hidden">
+                <p>請選擇挑戰題數：</p>
+                <button class="menu-btn" onclick="initGame(20)">🐣 20 題 (入門)</button>
+                <button class="menu-btn" onclick="initGame(30)">🐰 30 題 (練習)</button>
+                <button class="menu-btn" onclick="initGame(40)">🦊 40 題 (挑戰)</button>
+                <button class="menu-btn" onclick="initGame(50)">🦁 50 題 (大師)</button>
             </div>
         </div>
     </div>
 
-    <div id="mistake-list">
-        <h3>📝 錯題本 (需要複習的字)</h3>
-        <div class="mistake-items" id="mistake-container">
+    <div id="game-wrapper" class="hidden">
+        
+        <div class="scoreboard">
+            <div class="score-item score-a">✅ 答對: <span id="val-a">0</span></div>
+            <div class="score-item score-b">❌ 答錯: <span id="val-b">0</span></div>
+            <div class="score-item score-n">🔢 總次數: <span id="val-n">0</span></div>
+        </div>
+
+        <h2>ㄣㄥ魔法森林 - 錯題本版</h2>
+        
+        <p id="instructions">
+            💡 遊戲說明：請將畫面中央的字拖曳到右邊正確發音的區域中。
+        </p>
+
+        <div id="feedback">準備開始...</div>
+
+        <div class="game-container">
+            <div class="drop-zone" id="zone-en" data-target-sound="en">
+                <div class="character-label">
+                    <h3>⚡ 小恩 (ㄣ)</h3>
+                </div>
             </div>
+
+            <div class="item-spawn-area">
+                <div class="draggable-item" id="currentItem" draggable="true" data-sound="en">
+                    <span>載</span>
+                </div>
+            </div>
+
+            <div class="drop-zone" id="zone-eng" data-target-sound="eng">
+                <div class="character-label">
+                    <h3>🔔 碰碰 (ㄥ)</h3>
+                </div>
+            </div>
+        </div>
+
+        <div id="mistake-list">
+            <h3>📝 錯題本 (需要複習的字)</h3>
+            <div class="mistake-items" id="mistake-container"></div>
+        </div>
     </div>
 
     <script>
         const draggableItem = document.getElementById('currentItem');
         const feedbackBox = document.getElementById('feedback');
-        const mistakeListDiv = document.getElementById('mistake-list'); // 取得錯題本 div
-        const mistakeContainer = document.getElementById('mistake-container'); // 取得錯題內容容器
+        const mistakeListDiv = document.getElementById('mistake-list');
+        const mistakeContainer = document.getElementById('mistake-container');
         
-        const maxQuestions = 50; 
-        const passThreshold = 45; 
+        // 選單相關元素
+        const startMenu = document.getElementById('start-menu');
+        const loadingText = document.getElementById('loading-text');
+        const levelSelection = document.getElementById('level-selection');
+        const gameWrapper = document.getElementById('game-wrapper');
+
+        // 遊戲變數
+        let maxQuestions = 50; 
+        let passThreshold = 45; 
 
         let countN = 0; 
         let countA = 0; 
         let countB = 0; 
 
-        let questionBank = []; 
-        let currentGameQuestions = []; 
-        let mistakes = []; // 新增：用來記錄答錯的字
+        let fullQuestionBank = []; // 原始完整題庫
+        let currentGameQuestions = []; // 本次遊戲選出的題目
+        let mistakes = []; 
         let currentQuestionIndex = 0;
 
-        // --- 初始化並開始遊戲 ---
-        function startGame() {
-            if (questionBank.length < maxQuestions) {
-                feedbackBox.textContent = `❌ 題庫不足 ${maxQuestions} 題，請增加 questions.json 內容。`;
-                feedbackBox.style.color = "red";
-                draggableItem.querySelector('span').textContent = '⚠️';
+        // --- 1. 載入題庫 ---
+        async function loadQuestionBank() {
+            try {
+                const response = await fetch('questions.json'); 
+                if (!response.ok) throw new Error("無法讀取檔案");
+                
+                const loadedData = await response.json();
+                
+                if (Array.isArray(loadedData) && loadedData.length > 0) {
+                    fullQuestionBank = loadedData;
+                    // 題庫載入完成，顯示按鈕
+                    loadingText.style.display = 'none';
+                    levelSelection.classList.remove('hidden');
+                } else {
+                    loadingText.textContent = "❌ 題庫格式錯誤或為空";
+                    loadingText.style.color = "red";
+                }
+            } catch (error) {
+                console.error(error);
+                loadingText.textContent = "❌ 無法載入題庫 questions.json";
+                loadingText.style.color = "red";
+            }
+        }
+        
+        loadQuestionBank();
+
+        // --- 2. 初始化遊戲 ---
+        function initGame(selectedCount) {
+            if (fullQuestionBank.length < selectedCount) {
+                alert(`題庫數量不足 ${selectedCount} 題 (目前只有 ${fullQuestionBank.length} 題)`);
                 return;
             }
 
-            questionBank.sort(() => Math.random() - 0.5);
-            currentGameQuestions = questionBank.slice(0, maxQuestions);
+            maxQuestions = selectedCount;
+            // 設定過關門檻為 90% (無條件捨去)
+            passThreshold = Math.floor(selectedCount * 0.9);
+
+            // 切換介面
+            startMenu.style.display = 'none';
+            gameWrapper.classList.remove('hidden');
+            gameWrapper.style.display = 'flex'; 
+
+            startGameLogic();
+        }
+
+        function startGameLogic() {
+            // 洗牌並取出指定數量的題目
+            let shuffled = [...fullQuestionBank].sort(() => Math.random() - 0.5);
+            currentGameQuestions = shuffled.slice(0, maxQuestions);
 
             // 重設變數
             currentQuestionIndex = 0;
             countN = 0; countA = 0; countB = 0;
-            mistakes = []; // 清空錯題紀錄
+            mistakes = []; 
             
             // 重設 UI
-            mistakeListDiv.style.display = 'none'; // 隱藏錯題本
+            mistakeListDiv.style.display = 'none'; 
             mistakeContainer.innerHTML = '';
             
             updateScoreUI();
             loadCurrentQuestion();
             
-            feedbackBox.textContent = `✅ 題庫載入成功！開始 ${maxQuestions} 題挑戰！`;
+            feedbackBox.textContent = `✅ 遊戲開始！共 ${maxQuestions} 題 (及格目標：${passThreshold} 題)`;
             feedbackBox.style.color = "green";
         }
-        
-        async function loadQuestionBank() {
-            feedbackBox.textContent = "正在從伺服器載入題庫...";
-            draggableItem.querySelector('span').textContent = '讀';
-            
-            try {
-                const response = await fetch('questions.json'); 
-                if (!response.ok) {
-                    throw new Error(`無法載入檔案，狀態碼: ${response.status}`);
-                }
-                const loadedData = await response.json();
-                
-                if (Array.isArray(loadedData) && loadedData.length >= maxQuestions) {
-                    questionBank = loadedData;
-                    startGame(); 
-                } else {
-                    throw new Error(`題庫檔案內容不足 ${maxQuestions} 題或格式不正確。`);
-                }
-            } catch (error) {
-                console.error("載入題庫時發生錯誤:", error);
-                feedbackBox.textContent = `❌ 載入錯誤！請檢查 questions.json 檔案。`;
-                feedbackBox.style.color = "red";
-                draggableItem.querySelector('span').textContent = '錯';
-            }
-        }
-        
-        loadQuestionBank();
 
         // --- 遊戲邏輯 ---
 
@@ -335,7 +410,7 @@
                 return; 
             }
 
-            const currentQ = currentGameQuestions[currentQuestionIndex]; // 取得當前題目物件
+            const currentQ = currentGameQuestions[currentQuestionIndex]; 
             const itemSound = draggableItem.dataset.sound;
             const zoneSound = selectedZone.dataset.targetSound;
 
@@ -356,8 +431,7 @@
                 feedbackBox.style.color = "red";
                 selectedZone.style.borderColor = "red";
                 
-                // --- 錯題紀錄邏輯 ---
-                // 檢查是否已經記錄過這個字（避免重複按錯重複記）
+                // 記錄錯題
                 const alreadyRecorded = mistakes.some(m => m.word === currentQ.word);
                 if (!alreadyRecorded) {
                     mistakes.push(currentQ);
@@ -384,13 +458,13 @@
         function endGame() {
             const passed = countA >= passThreshold;
             
-            let resultMessage = `✅ **全部 ${currentGameQuestions.length} 題已完成！**`;
+            let resultMessage = `✅ **遊戲結束！**`;
             
             if (passed) {
-                resultMessage += `<br>🎉 **恭喜您，答對 ${countA} 題，成功過關！** (門檻：${passThreshold} 題)`;
+                resultMessage += `<br>🎉 **太棒了！答對 ${countA} 題，成功過關！** <br>(目標：${passThreshold} 題)`;
                 feedbackBox.style.color = "#007bff"; 
             } else {
-                resultMessage += `<br>😢 **挑戰失敗，答對 ${countA} 題。** (門檻：${passThreshold} 題)`;
+                resultMessage += `<br>😢 **再接再厲，答對 ${countA} 題。** <br>(目標：${passThreshold} 題)`;
                 feedbackBox.style.color = "#dc3545"; 
             }
             
@@ -398,34 +472,29 @@
             draggableItem.querySelector('span').textContent = '🏁';
             draggableItem.style.borderColor = passed ? '#007bff' : '#dc3545';
 
-            // --- 顯示錯題本 ---
             showMistakes();
         }
 
         function showMistakes() {
-            if (mistakes.length === 0) {
-                return; // 如果全對，就不顯示錯題本
-            }
+            if (mistakes.length === 0) return; 
 
-            mistakeListDiv.style.display = 'block'; // 顯示區塊
-            mistakeContainer.innerHTML = ''; // 清空舊內容
+            mistakeListDiv.style.display = 'block'; 
+            mistakeContainer.innerHTML = ''; 
 
             mistakes.forEach(q => {
                 const tag = document.createElement('div');
                 tag.className = 'mistake-tag';
-                // 顯示字與正確讀音
                 const soundLabel = q.sound === 'en' ? 'ㄣ' : 'ㄥ';
                 tag.innerHTML = `${q.word} <span class="mistake-hint">(${soundLabel})</span>`;
                 mistakeContainer.appendChild(tag);
             });
             
-            // 頁面捲動到底部，讓使用者看到錯題本
             setTimeout(() => {
                 mistakeListDiv.scrollIntoView({ behavior: 'smooth' });
             }, 500);
         }
 
-        // --- 拖曳事件處理 (保持不變) ---
+        // --- 拖曳事件處理 ---
 
         function resetPosition() {
             draggableItem.style.transform = 'translate(0px, 0px)';
@@ -464,15 +533,14 @@
             draggableItem.style.transform = `translate(${initialX + dx}px, ${initialY + dy}px)`;
         }, {passive: false});
 
-        // 修正後的 touchend 邏輯 (包含隱藏/顯示修正)
         draggableItem.addEventListener('touchend', (e) => {
             draggableItem.style.transition = 'all 0.3s'; 
             
             const touch = e.changedTouches[0];
 
-            draggableItem.style.display = 'none'; // 暫時隱藏以偵測下方元素
+            draggableItem.style.display = 'none'; 
             const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-            draggableItem.style.display = 'flex'; // 恢復顯示
+            draggableItem.style.display = 'flex'; 
 
             const zone = dropTarget ? dropTarget.closest('.drop-zone') : null;
 
