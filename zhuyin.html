@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>ㄣㄥ魔法森林 - 錯題本版</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f0f8ff;
+            overscroll-behavior: none; 
+            padding-bottom: 50px; /* 預留底部空間給錯題本 */
+        }
+
+        .controls {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 15px;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            height: 0; 
+        }
+
+        /* --- 計分板 --- */
+        .scoreboard {
+            display: flex;
+            gap: 15px;
+            margin-top: 10px;
+            padding: 10px 20px;
+            background: white;
+            border-radius: 50px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            font-weight: bold;
+            font-size: 1em;
+        }
+
+        .score-item { display: flex; align-items: center; gap: 5px; }
+        .score-a { color: #2e7d32; } 
+        .score-b { color: #c62828; } 
+        .score-n { color: #555; }     
+
+        h2 { margin: 10px 0; font-size: 1.2rem; }
+        
+        /* 遊戲說明樣式 */
+        #instructions {
+            font-size: 0.9em;
+            color: #4a4a4a;
+            margin-top: 5px;
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background-color: #ffe0b2; 
+            border-radius: 5px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        #feedback { 
+            min-height: 60px; 
+            font-weight: bold; 
+            margin-bottom: 5px; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center; 
+            text-align: center;
+        }
+
+        /* --- 遊戲主區域 --- */
+        .game-container {
+            display: flex;
+            justify-content: space-between;
+            width: 90%;
+            max-width: 800px;
+            height: 350px;
+            border: 2px dashed #ccc;
+            padding: 10px;
+            background: white;
+            border-radius: 15px;
+            user-select: none; 
+            position: relative;
+        }
+
+        .drop-zone {
+            width: 45%; 
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end; 
+            border-radius: 10px;
+            border: 3px solid transparent;
+            transition: all 0.3s;
+            background-color: #fafafa;
+            
+            background-repeat: no-repeat;
+            background-size: contain; 
+            background-position: center top; 
+        }
+        
+        /* 圖片實作區域 */
+        #zone-en { 
+            background-color: transparent; 
+            background-image: url('images/en_char.png'); 
+        }
+
+        #zone-eng { 
+            background-color: transparent;
+            background-image: url('images/eng_char.png');
+        }
+
+        .drop-zone.drag-over {
+            border-color: #ffeb3b;
+            transform: scale(1.02);
+            opacity: 0.9;
+        }
+        
+        .character-label {
+            margin-bottom: 10px;
+            padding: 5px 10px;
+            background: rgba(255, 255, 255, 0.8);
+            border-radius: 5px;
+        }
+
+        .item-spawn-area {
+            position: absolute; 
+            top: 50%; 
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 100px;
+            height: 100px;
+            z-index: 10;
+        }
+
+        .draggable-item {
+            width: 100px;
+            height: 100px;
+            background-color: #fff;
+            border: 5px solid #4caf50;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 45px;
+            font-weight: bold;
+            color: #333;
+            cursor: grab;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            touch-action: none; 
+            transition: all 0.3s; 
+        }
+        
+        .draggable-item:active { cursor: grabbing; transform: scale(1.1); }
+
+        /* --- 錯題本樣式 (新增) --- */
+        #mistake-list {
+            width: 90%;
+            max-width: 800px;
+            margin-top: 20px;
+            padding: 15px;
+            background-color: #fff3f3;
+            border: 2px solid #ffcdd2;
+            border-radius: 10px;
+            display: none; /* 預設隱藏，結束時顯示 */
+        }
+
+        #mistake-list h3 {
+            color: #d32f2f;
+            margin-top: 0;
+            text-align: center;
+        }
+
+        .mistake-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .mistake-tag {
+            background-color: white;
+            border: 1px solid #e57373;
+            color: #c62828;
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            font-size: 1.1em;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .mistake-hint
