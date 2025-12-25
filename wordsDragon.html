@@ -3,80 +3,94 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>飛龍大探險-簡易版</title>
+    <title>飛龍大探險-簡易修正版</title>
     <style>
         :root { --primary: #3498db; --success: #2ecc71; --error: #e74c3c; }
         body { margin: 0; padding: 0; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: #87CEEB; touch-action: none; }
         
         #game-container { position: relative; width: 100vw; height: 100vh; overflow: hidden; }
 
-        /* 三條軌道線 (輔助視覺) */
-        .lane { position: absolute; width: 100%; height: 2px; background: rgba(255,255,255,0.3); left: 0; }
+        /* 三條軌道中心線 (隱形或淡淡的) */
+        .lane-guide { position: absolute; width: 100%; height: 1px; background: rgba(255,255,255,0.2); left: 0; z-index: 1; }
 
-        /* 飛龍：改為平滑切換位置 */
+        /* 飛龍：位置調整 */
         #dragon {
             position: absolute;
-            left: 10%;
-            font-size: 60px;
+            left: 8%;
+            font-size: 65px; /* 平板上放大一點 */
             z-index: 10;
-            transition: top 0.2s ease-out; /* 快速且平滑的切換 */
+            transition: top 0.15s ease-out;
             user-select: none;
+            filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.2));
         }
 
-        /* 答案球：變大更好撞 */
+        /* 答案球 */
         .bubble {
             position: absolute;
-            width: 100px;
-            height: 100px;
-            background: white;
-            border: 5px solid var(--primary);
+            width: 110px;
+            height: 110px;
+            background: rgba(255, 255, 255, 0.95);
+            border: 6px solid var(--primary);
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 30px;
+            font-size: 32px;
             font-weight: bold;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+            z-index: 5;
         }
 
-        /* UI 層 */
-        .stats { position: absolute; top: 10px; left: 10px; font-size: 22px; font-weight: bold; z-index: 30; background: rgba(255,255,255,0.7); padding: 5px 15px; border-radius: 10px; }
+        /* UI 層次調整 */
+        .stats { 
+            position: absolute; top: 15px; left: 50%; transform: translateX(-50%);
+            font-size: 24px; font-weight: bold; z-index: 30; 
+            background: rgba(255,255,255,0.8); padding: 5px 25px; border-radius: 20px;
+            display: flex; gap: 20px;
+        }
         
+        /* 題目欄：移到最下方，避免遮擋 */
         #quiz-bar {
             position: absolute;
-            top: 70px; left: 50%; transform: translateX(-50%);
-            background: white; padding: 10px 30px; border-radius: 30px;
-            font-size: 36px; font-weight: bold; border: 4px solid var(--primary);
-            z-index: 30; width: 80%; text-align: center;
-        }
-
-        #instruction {
-            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
-            background: rgba(0,0,0,0.6); color: white; padding: 10px 20px;
-            border-radius: 10px; font-size: 18px; text-align: center; z-index: 30;
+            bottom: 30px; left: 50%; transform: translateX(-50%);
+            background: white; padding: 15px 40px; border-radius: 50px;
+            font-size: 40px; font-weight: bold; border: 5px solid var(--primary);
+            z-index: 30; width: 85%; text-align: center;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
         }
 
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); display: flex; flex-direction: column;
+            background: rgba(0,0,0,0.85); display: flex; flex-direction: column;
             align-items: center; justify-content: center; z-index: 100; color: white;
+            text-align: center;
         }
-        .btn { background: var(--success); border: none; padding: 20px 50px; color: white; font-size: 28px; border-radius: 50px; cursor: pointer; }
+        .instruction-box { background: rgba(255,255,255,0.1); padding: 20px; border-radius: 15px; margin: 20px; border: 1px dashed #aaa; }
+        .btn { background: var(--success); border: none; padding: 20px 60px; color: white; font-size: 30px; border-radius: 60px; cursor: pointer; margin-top: 10px; }
     </style>
 </head>
 <body>
 
     <div id="game-container">
-        <div class="stats">❤️ <span id="hp">3</span> | 🏆 <span id="score">0</span></div>
-        <div id="quiz-bar">載入中...</div>
+        <div class="stats">
+            <span>❤️ <span id="hp">3</span></span>
+            <span>🏆 <span id="score">0</span></span>
+        </div>
+
         <div id="dragon">🐉</div>
-        <div id="instruction">點擊螢幕【上半部】向上移，【下半部】向下移</div>
+
+        <div id="quiz-bar">載入題庫中...</div>
     </div>
 
     <div id="menu" class="overlay">
-        <h1>🐉 飛龍大探險 (簡易版)</h1>
-        <p>控制飛龍上下移動，吃掉正確答案！</p>
-        <button class="btn" onclick="startGame()">開始遊戲</button>
+        <h1>🐉 飛龍大探險</h1>
+        <div class="instruction-box">
+            <p style="font-size: 24px; color: #ffeb3b;">簡單玩法：</p>
+            <p>點擊螢幕【上半部】飛龍往上移</p>
+            <p>點擊螢幕【下半部】飛龍往下移</p>
+            <p>吃掉正確的字或注音，避開錯字！</p>
+        </div>
+        <button class="btn" onclick="startGame()">點擊開始</button>
     </div>
 
     <script>
@@ -84,8 +98,8 @@
         let currentQ = null;
         let hp = 3;
         let score = 0;
-        let currentLane = 1; // 0:上, 1:中, 2:下
-        const laneY = [25, 50, 75]; // 高度百分比
+        let currentLane = 1; 
+        const laneY = [22, 48, 74]; // 重新計算過的比例，避開底部題目欄
         let bubbles = [];
         let gameActive = false;
 
@@ -93,7 +107,7 @@
             try {
                 const res = await fetch('quiz.json');
                 allData = await res.json();
-            } catch (e) { alert("讀取題庫失敗"); }
+            } catch (e) { alert("讀取題庫失敗，請確認 quiz.json 存在。"); }
         }
 
         function startGame() {
@@ -105,33 +119,27 @@
             requestAnimationFrame(gameLoop);
         }
 
-        // 簡化操作：點擊上下決定軌道
-        window.addEventListener('mousedown', (e) => {
+        // 平板優化：點擊區域判斷
+        function handleInput(y) {
             if (!gameActive) return;
-            if (e.clientY < window.innerHeight / 2) {
+            if (y < window.innerHeight / 2) {
                 if (currentLane > 0) currentLane--;
             } else {
                 if (currentLane < 2) currentLane++;
             }
             moveDragon();
-        });
+        }
 
-        // 支援觸控
+        window.addEventListener('mousedown', (e) => handleInput(e.clientY));
         window.addEventListener('touchstart', (e) => {
-            if (!gameActive) return;
-            let touchY = e.touches[0].clientY;
-            if (touchY < window.innerHeight / 2) {
-                if (currentLane > 0) currentLane--;
-            } else {
-                if (currentLane < 2) currentLane++;
-            }
-            moveDragon();
+            handleInput(e.touches[0].clientY);
             e.preventDefault();
         }, {passive: false});
 
         function moveDragon() {
             const dragon = document.getElementById('dragon');
-            dragon.style.top = `calc(${laneY[currentLane]}% - 30px)`;
+            dragon.style.top = `${laneY[currentLane]}%`;
+            dragon.style.transform = 'translateY(-50%)';
         }
 
         function spawnQuiz() {
@@ -144,7 +152,8 @@
                 b.className = 'bubble';
                 b.innerText = text;
                 b.style.left = '110vw';
-                b.style.top = `calc(${laneY[i]}% - 50px)`;
+                b.style.top = `${laneY[i]}%`;
+                b.style.transform = 'translateY(-50%)';
                 document.getElementById('game-container').appendChild(b);
                 bubbles.push({ el: b, x: window.innerWidth * 1.1, lane: i, text: text });
             });
@@ -155,10 +164,10 @@
 
             for (let i = bubbles.length - 1; i >= 0; i--) {
                 let b = bubbles[i];
-                b.x -= 5 + (score * 0.2); // 速度隨分數增加
+                b.x -= 6 + (score * 0.15); // 稍微加快基礎速度
                 b.el.style.left = b.x + 'px';
 
-                // 碰撞檢查 (當球經過飛龍所在位置)
+                // 碰撞檢查 (優化碰撞半徑)
                 if (b.x < window.innerWidth * 0.18 && b.x > window.innerWidth * 0.05) {
                     if (b.lane === currentLane) {
                         checkAnswer(b.text);
@@ -168,8 +177,7 @@
                     }
                 }
 
-                // 沒吃到球飛出螢幕
-                if (b.x < -120) {
+                if (b.x < -150) {
                     clearBubbles();
                     spawnQuiz();
                     break;
@@ -181,6 +189,9 @@
         function checkAnswer(ans) {
             if (ans === currentQ.ans) {
                 score++;
+                // 答對效果：題目變綠一下
+                document.getElementById('quiz-bar').style.borderColor = 'var(--success)';
+                setTimeout(()=>document.getElementById('quiz-bar').style.borderColor = 'var(--primary)', 300);
             } else {
                 hp--;
                 flashScreen();
@@ -207,7 +218,11 @@
         function gameOver() {
             gameActive = false;
             document.getElementById('menu').style.display = 'flex';
-            document.getElementById('menu').innerHTML = `<h1>挑戰結束</h1><p>獲得分數：${score}</p><button class="btn" onclick="location.reload()">再玩一次</button>`;
+            document.getElementById('menu').innerHTML = `
+                <h1 style="font-size: 50px;">挑戰結束！</h1>
+                <p style="font-size: 30px;">恭喜獲得 ${score} 分</p>
+                <button class="btn" onclick="location.reload()">再玩一次</button>
+            `;
         }
 
         init();
