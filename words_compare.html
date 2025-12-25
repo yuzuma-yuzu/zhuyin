@@ -3,138 +3,143 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>康軒四上相似字大挑戰</title>
+    <title>康軒四上相似字極速挑戰</title>
     <style>
-        :root { --primary: #2980b9; --secondary: #27ae60; --bg: #f5f6fa; }
+        :root { --primary: #3498db; --success: #2ecc71; --error: #e74c3c; --bg: #f0f3f6; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .game-card { background: white; width: 90%; max-width: 600px; padding: 25px; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.1); text-align: center; }
-        .level-selector { margin-bottom: 20px; display: flex; justify-content: center; gap: 10px; }
-        .lv-btn { padding: 10px 20px; border: none; border-radius: 50px; cursor: pointer; background: #dcdde1; transition: 0.3s; font-weight: bold; }
-        .lv-btn.active { background: var(--primary); color: white; }
-        .stats { display: flex; justify-content: space-between; font-size: 1.2rem; margin: 15px 0; color: #353b48; font-weight: bold; }
-        .question-area { background: #f1f2f6; height: 100px; display: flex; align-items: center; justify-content: center; font-size: 1.8rem; border-radius: 15px; margin-bottom: 20px; color: #2f3640; border: 3px solid #dcdde1; padding: 0 10px; }
-        .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .hole { height: 110px; background: #7f8c8d; border-radius: 15px; position: relative; overflow: hidden; border-bottom: 6px solid #2f3640; }
-        .mole { position: absolute; top: 100%; left: 0; width: 100%; height: 100%; background: #e67e22; color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; transition: top 0.15s ease-out; cursor: pointer; user-select: none; }
-        .mole.up { top: 0; }
-        #start-btn { margin-top: 25px; width: 100%; padding: 15px; font-size: 1.3rem; border: none; border-radius: 10px; background: var(--secondary); color: white; cursor: pointer; box-shadow: 0 5px 0 #1e8449; }
-        #start-btn:active { transform: translateY(3px); box-shadow: none; }
-        #status-msg { font-size: 0.9rem; color: #7f8c8d; margin-top: 10px; }
+        .game-card { background: white; width: 95%; max-width: 500px; padding: 30px; border-radius: 24px; box-shadow: 0 20px 40px rgba(0,0,0,0.1); text-align: center; }
+        .lv-select { display: flex; gap: 10px; justify-content: center; margin-bottom: 20px; }
+        .lv-btn { flex: 1; padding: 12px; border: 2px solid #ddd; border-radius: 12px; background: none; cursor: pointer; font-weight: bold; transition: 0.2s; }
+        .lv-btn.active { border-color: var(--primary); background: var(--primary); color: white; }
+        .stats { display: flex; justify-content: space-between; font-size: 1.1rem; margin-bottom: 20px; color: #666; }
+        .combo-tag { color: var(--success); font-weight: bold; height: 24px; }
+        .question-display { height: 120px; display: flex; align-items: center; justify-content: center; font-size: 2.2rem; font-weight: bold; color: #2c3e50; background: #f8f9fa; border-radius: 16px; margin-bottom: 30px; border: 2px solid #eee; position: relative; }
+        .option-container { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .opt-btn { padding: 20px 10px; font-size: 1.5rem; border: none; border-radius: 12px; background: #fff; box-shadow: 0 4px 0 #ddd; border: 1px solid #eee; cursor: pointer; transition: 0.1s; }
+        .opt-btn:active { transform: translateY(3px); box-shadow: none; }
+        .opt-btn:hover { background: #f1f1f1; }
+        #start-screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.9); display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: 24px; z-index: 10; }
+        .big-btn { padding: 15px 50px; font-size: 1.5rem; background: var(--success); color: white; border: none; border-radius: 50px; cursor: pointer; box-shadow: 0 6px 0 #27ae60; }
+        .correct-flash { background: #d4edda !important; border-color: #28a745 !important; }
+        .wrong-flash { background: #f8d7da !important; border-color: #dc3545 !important; }
     </style>
 </head>
 <body>
 
 <div class="game-card">
-    <h2>🎯 康軒四上 相似字地鼠</h2>
-    
-    <div class="level-selector">
-        <button class="lv-btn active" data-lv="1" onclick="changeLevel(1)">第一關 (L7-L9)</button>
-        <button class="lv-btn" data-lv="2" onclick="changeLevel(2)">第二關 (L10-L12)</button>
+    <div id="start-screen">
+        <h2>相似字極速挑戰</h2>
+        <p>點擊正確答案，挑戰連擊高分！</p>
+        <button class="big-btn" onclick="startGame()">開始練習</button>
+    </div>
+
+    <div class="lv-select">
+        <button class="lv-btn active" id="btn-l1" onclick="setLevel(1)">第一關 (L7-L9)</button>
+        <button class="lv-btn" id="btn-l2" onclick="setLevel(2)">第二關 (L10-L12)</button>
     </div>
 
     <div class="stats">
         <div>分數：<span id="score">0</span></div>
-        <div>剩餘時間：<span id="time">45</span>s</div>
+        <div class="combo-tag" id="combo"></div>
+        <div>時間：<span id="time">60</span>s</div>
     </div>
 
-    <div class="question-area" id="question">請選擇關卡並點擊開始</div>
+    <div class="question-display" id="q-text">準備好了嗎？</div>
 
-    <div class="grid" id="game-grid">
-        <div class="hole"><div class="mole" onclick="handleHit(0)"></div></div>
-        <div class="hole"><div class="mole" onclick="handleHit(1)"></div></div>
-        <div class="hole"><div class="mole" onclick="handleHit(2)"></div></div>
-        <div class="hole"><div class="mole" onclick="handleHit(3)"></div></div>
-        <div class="hole"><div class="mole" onclick="handleHit(4)"></div></div>
-        <div class="hole"><div class="mole" onclick="handleHit(5)"></div></div>
+    <div class="option-container">
+        <button class="opt-btn" onclick="checkAnswer(0)" id="opt0">-</button>
+        <button class="opt-btn" onclick="checkAnswer(1)" id="opt1">-</button>
+        <button class="opt-btn" onclick="checkAnswer(2)" id="opt2">-</button>
     </div>
-
-    <button id="start-btn" onclick="startGame()">開始遊戲</button>
-    <div id="status-msg">正在載入題庫...</div>
 </div>
 
 <script>
-    let rawData = [];
+    let allData = [];
     let currentPool = [];
-    let currentQuiz = null;
+    let currentQ = null;
     let score = 0;
-    let timeLeft = 45;
-    let gameInterval, moleInterval;
-    let activeLevel = 1;
-    const moles = document.querySelectorAll('.mole');
+    let combo = 0;
+    let timeLeft = 60;
+    let timer = null;
 
-    async function init() {
+    async function loadData() {
         try {
             const res = await fetch('quiz.json');
-            if (!res.ok) throw new Error();
-            rawData = await res.json();
-            document.getElementById('status-msg').innerText = "✅ 題庫載入成功！";
-            changeLevel(1);
+            allData = await res.json();
+            setLevel(1);
         } catch (e) {
-            document.getElementById('status-msg').innerText = "❌ 讀取失敗，請確認與 quiz.json 放在一起";
-            document.getElementById('status-msg').style.color = "red";
+            document.getElementById('q-text').innerText = "找不到 quiz.json";
         }
     }
 
-    function changeLevel(lv) {
-        if(gameInterval) return;
-        activeLevel = lv;
-        document.querySelectorAll('.lv-btn').forEach(b => b.classList.toggle('active', b.dataset.lv == lv));
-        currentPool = rawData.filter(d => d.level === lv);
-        document.getElementById('question').innerText = `已準備好第 ${lv} 關`;
+    function setLevel(lv) {
+        document.getElementById('btn-l1').classList.toggle('active', lv === 1);
+        document.getElementById('btn-l2').classList.toggle('active', lv === 2);
+        currentPool = allData.filter(d => d.level === lv);
     }
 
     function startGame() {
-        if (currentPool.length === 0) return;
-        score = 0; timeLeft = 45;
-        document.getElementById('score').innerText = score;
-        document.getElementById('start-btn').disabled = true;
+        score = 0; combo = 0; timeLeft = 60;
+        document.getElementById('start-screen').style.display = 'none';
+        updateStats();
         nextQuestion();
-        gameInterval = setInterval(() => {
+        
+        if(timer) clearInterval(timer);
+        timer = setInterval(() => {
             timeLeft--;
             document.getElementById('time').innerText = timeLeft;
-            if (timeLeft <= 0) endGame();
+            if(timeLeft <= 0) endGame();
         }, 1000);
-        showMole();
     }
 
     function nextQuestion() {
-        currentQuiz = currentPool[Math.floor(Math.random() * currentPool.length)];
-        document.getElementById('question').innerText = currentQuiz.q;
+        currentQ = currentPool[Math.floor(Math.random() * currentPool.length)];
+        document.getElementById('q-text').innerText = currentQ.q;
+        
+        // 打亂選項順序
+        let opts = [...currentQ.options].sort(() => Math.random() - 0.5);
+        for(let i=0; i<3; i++) {
+            document.getElementById(`opt${i}`).innerText = opts[i] || "";
+        }
     }
 
-    function showMole() {
-        if (timeLeft <= 0) return;
-        const idx = Math.floor(Math.random() * moles.length);
-        const opt = currentQuiz.options[Math.floor(Math.random() * currentQuiz.options.length)];
-        moles[idx].innerText = opt;
-        moles[idx].classList.add('up');
-        setTimeout(() => {
-            moles[idx].classList.remove('up');
-            moleInterval = setTimeout(showMole, activeLevel === 1 ? 850 : 650);
-        }, 1100);
-    }
-
-    function handleHit(idx) {
-        const mole = moles[idx];
-        if (!mole.classList.contains('up')) return;
-        if (mole.innerText === currentQuiz.ans) {
-            score += 10;
+    function checkAnswer(idx) {
+        const selected = document.getElementById(`opt${idx}`).innerText;
+        const display = document.getElementById('q-text');
+        
+        if(selected === currentQ.ans) {
+            score += (10 + Math.floor(combo/5) * 5); // 連擊越高分越多
+            combo++;
+            flashEffect('correct-flash');
             nextQuestion();
         } else {
-            score = Math.max(0, score - 5);
+            combo = 0;
+            flashEffect('wrong-flash');
+            // 答錯顯示提示一秒
+            display.innerText = `答案是：${currentQ.ans}`;
+            setTimeout(nextQuestion, 800);
         }
+        updateStats();
+    }
+
+    function flashEffect(className) {
+        const box = document.getElementById('q-text');
+        box.classList.add(className);
+        setTimeout(() => box.classList.remove(className), 200);
+    }
+
+    function updateStats() {
         document.getElementById('score').innerText = score;
-        mole.classList.remove('up');
+        document.getElementById('combo').innerText = combo >= 3 ? `${combo} COMBO!` : "";
     }
 
     function endGame() {
-        clearInterval(gameInterval);
-        clearTimeout(moleInterval);
-        gameInterval = null;
-        alert(`完成！得分：${score}`);
-        document.getElementById('start-btn').disabled = false;
+        clearInterval(timer);
+        alert(`練習結束！\n您的得分：${score}\n最高連擊：${combo}`);
+        document.getElementById('start-screen').style.display = 'flex';
     }
-    init();
+
+    loadData();
 </script>
 </body>
 </html>
