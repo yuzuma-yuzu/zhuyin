@@ -3,52 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>相似字爬塔大冒險</title>
+    <title>相似字爬塔大冒險 - 最終修正版</title>
     <style>
-        :root { --primary: #4a90e2; --success: #2ecc71; --error: #e74c3c; --gold: #f1c40f; }
-        body { font-family: "Microsoft JhengHei", sans-serif; background: #2c3e50; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: white; }
-        .game-container { background: #34495e; width: 95%; max-width: 500px; padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.5); position: relative; }
+        :root { --primary: #4a90e2; --success: #2ecc71; --error: #e74c3c; --bg: #2c3e50; }
+        body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; color: white; }
+        .game-container { background: #34495e; width: 95%; max-width: 500px; padding: 25px; border-radius: 24px; box-shadow: 0 15px 40px rgba(0,0,0,0.4); position: relative; }
         
-        /* 頂部資訊欄 */
-        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .hp-bar { color: var(--error); font-size: 1.5rem; }
-        .stage-info { background: rgba(0,0,0,0.3); padding: 5px 15px; border-radius: 20px; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; }
+        .hp-bar { color: var(--error); font-size: 1.4rem; letter-spacing: 3px; }
+        .stage-info { background: #2980b9; padding: 6px 18px; border-radius: 20px; font-weight: bold; }
 
         /* 進度條 */
-        .progress-wrapper { width: 100%; height: 10px; background: #2c3e50; border-radius: 5px; margin-bottom: 30px; position: relative; }
-        .progress-fill { height: 100%; background: var(--success); width: 0%; border-radius: 5px; transition: 0.3s; }
-        .character { position: absolute; top: -25px; left: 0%; transition: 0.3s; font-size: 20px; }
-
-        /* 題目區 */
-        .quiz-box { background: white; color: #333; height: 150px; border-radius: 15px; display: flex; align-items: center; justify-content: center; font-size: 2rem; font-weight: bold; margin-bottom: 25px; box-shadow: inset 0 0 10px rgba(0,0,0,0.1); padding: 0 15px; text-align: center; }
+        .progress-wrapper { width: 100%; height: 12px; background: #2c3e50; border-radius: 10px; margin-bottom: 40px; position: relative; }
+        .progress-fill { height: 100%; background: var(--success); width: 0%; border-radius: 10px; transition: 0.4s ease-out; }
         
-        /* 按鈕區 */
-        .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
-        .btn { background: var(--primary); border: none; padding: 20px 10px; color: white; font-size: 1.5rem; border-radius: 12px; cursor: pointer; transition: 0.1s; box-shadow: 0 5px 0 #2980b9; }
-        .btn:active { transform: translateY(3px); box-shadow: none; }
-        .btn.wrong { background: var(--error); box-shadow: 0 5px 0 #c0392b; }
+        .character { 
+            position: absolute; 
+            top: -30px; 
+            left: 0%; 
+            transition: 0.4s ease-out; 
+            font-size: 28px; 
+            /* 鏡像翻轉人物：讓預設面向左邊的小人改為面向右邊跑 */
+            transform: scaleX(-1); 
+        }
 
-        /* 彈窗 */
-        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); border-radius: 20px; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; }
-        .overlay h2 { font-size: 2.5rem; margin-bottom: 10px; }
-        .msg { font-size: 1.2rem; margin-bottom: 20px; color: #bdc3c7; }
+        .quiz-box { background: white; color: #2c3e50; height: 140px; border-radius: 20px; display: flex; align-items: center; justify-content: center; font-size: 2.1rem; font-weight: bold; margin-bottom: 25px; padding: 0 20px; text-align: center; line-height: 1.4; border-bottom: 5px solid #bdc3c7; }
+        
+        .options { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+        .btn { background: var(--primary); border: none; padding: 18px 5px; color: white; font-size: 1.6rem; border-radius: 15px; cursor: pointer; transition: 0.1s; box-shadow: 0 5px 0 #2980b9; }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
+        .btn.wrong { background: var(--error) !important; box-shadow: 0 5px 0 #c0392b !important; }
+
+        .overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(44, 62, 80, 0.95); border-radius: 24px; display: none; flex-direction: column; align-items: center; justify-content: center; z-index: 100; text-align: center; padding: 20px; }
+        .overlay h2 { font-size: 2.2rem; color: #fff; margin-bottom: 15px; }
+        .msg { font-size: 1.1rem; color: #bdc3c7; margin-bottom: 30px; }
+        .big-btn { width: 220px; background: var(--success); box-shadow: 0 5px 0 #27ae60; }
     </style>
 </head>
 <body>
 
 <div class="game-container">
     <div class="top-bar">
-        <div class="stage-info">關卡 <span id="lv-num">1</span></div>
+        <div class="stage-info">📍 關卡 <span id="lv-num">1</span></div>
         <div class="hp-bar" id="hp-display">❤️❤️❤️</div>
-        <div id="score-display">✨ 0</div>
     </div>
 
     <div class="progress-wrapper">
-        <div class="character" id="char">🏃</div>
+        <div class="character" id="char">🏃‍♂️</div>
         <div class="progress-fill" id="prog"></div>
     </div>
 
-    <div class="quiz-box" id="q-text">加載中...</div>
+    <div class="quiz-box" id="q-text">載入中...</div>
 
     <div class="options">
         <button class="btn" onclick="guess(0)" id="opt0">-</button>
@@ -57,9 +62,9 @@
     </div>
 
     <div class="overlay" id="screen">
-        <h2 id="screen-title">挑戰開始</h2>
-        <p class="msg" id="screen-msg">目標：連續通過兩個階段</p>
-        <button class="btn" style="width:200px" onclick="startStage()" id="screen-btn">出發！</button>
+        <h2 id="screen-title">相似字大冒險</h2>
+        <p class="msg" id="screen-msg">從左向右衝刺，完成 10 題到達終點！</p>
+        <button class="btn big-btn" onclick="startStage()" id="screen-btn">出發！</button>
     </div>
 </div>
 
@@ -68,17 +73,16 @@
     let stagePool = [];
     let currentLv = 1;
     let hp = 3;
-    let score = 0;
     let progress = 0;
-    const goal = 10; // 每關 10 題
+    const goal = 10;
     let currentQ = null;
 
     async function init() {
         try {
             const res = await fetch('quiz.json');
             allData = await res.json();
-            showOverlay("康軒四上大冒險", "準備好挑戰 L7-L12 的相似字了嗎？");
-        } catch (e) { document.getElementById('q-text').innerText = "讀取題庫失敗"; }
+            showOverlay("挑戰開始", "準備好辨析 L7-L12 的相似字了嗎？\n面向右邊衝向終點吧！");
+        } catch (e) { document.getElementById('q-text').innerText = "讀取失敗"; }
     }
 
     function showOverlay(title, msg, btnText = "開始挑戰") {
@@ -100,57 +104,50 @@
     function nextQ() {
         currentQ = stagePool[Math.floor(Math.random() * stagePool.length)];
         document.getElementById('q-text').innerText = currentQ.q;
-        document.getElementById('q-text').style.color = "#333";
+        document.getElementById('q-text').style.color = "#2c3e50";
         
         let opts = [...currentQ.options].sort(() => Math.random() - 0.5);
         for(let i=0; i<3; i++) {
             const btn = document.getElementById(`opt${i}`);
             btn.innerText = opts[i] || "";
-            btn.className = "btn"; // 重置顏色
+            btn.className = "btn";
         }
     }
 
     function guess(idx) {
         const btn = document.getElementById(`opt${idx}`);
         if(btn.innerText === currentQ.ans) {
-            score += 10;
             progress++;
             updateUI();
-            if(progress >= goal) {
-                winStage();
-            } else {
-                nextQ();
-            }
+            if(progress >= goal) winStage();
+            else nextQ();
         } else {
             hp--;
             btn.classList.add('wrong');
-            document.getElementById('q-text').innerText = `答案是「${currentQ.ans}」`;
+            document.getElementById('q-text').innerText = `正確答案：${currentQ.ans}`;
             document.getElementById('q-text').style.color = "var(--error)";
             updateUI();
-            if(hp <= 0) {
-                showOverlay("挑戰失敗", "別氣餒，再練習一次吧！", "重新開始");
-            } else {
-                setTimeout(nextQ, 1000);
-            }
+            if(hp <= 0) showOverlay("挑戰失敗", "別灰心，重來一遍會更熟練！", "重試本關");
+            else setTimeout(nextQ, 1000);
         }
     }
 
     function updateUI() {
         document.getElementById('hp-display').innerText = "❤️".repeat(hp);
-        document.getElementById('score-display').innerText = `✨ ${score}`;
         document.getElementById('lv-num').innerText = currentLv;
         const percent = (progress / goal) * 100;
         document.getElementById('prog').style.width = percent + "%";
-        document.getElementById('char').style.left = `calc(${percent}% - 10px)`;
+        // 小人向右移動
+        document.getElementById('char').style.left = `calc(${percent}% - 20px)`;
     }
 
     function winStage() {
         if(currentLv === 1) {
             currentLv = 2;
-            showOverlay("第一關達成！", "太厲害了！準備好進入 L10-L12 了嗎？", "進入第二關");
+            showOverlay("關卡 1 通過！", "太棒了！接下來挑戰 L10-L12 的內容！", "進入第 2 關");
         } else {
-            showOverlay("全數通關！", `太強了！總得分：${score}`, "再次挑戰");
-            currentLv = 1; score = 0;
+            showOverlay("恭喜全數通關！", "你已經成為相似字辨析大師！", "再次挑戰");
+            currentLv = 1;
         }
     }
 
