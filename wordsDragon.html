@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>飛龍相似字/注音大探險</title>
+    <style>
+        :root { --primary: #3498db; --success: #2ecc71; --error: #e74c3c; --sky: #87CEEB; }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: #222; }
+        
+        #game-container {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%);
+            overflow: hidden;
+            display: none;
+        }
+
+        /* 雲朵背景 */
+        .cloud { position: absolute; background: white; border-radius: 50px; opacity: 0.8; z-index: 1; }
+
+        /* 飛龍 */
+        #dragon {
+            position: absolute;
+            left: 50px;
+            top: 50%;
+            font-size: 50px;
+            z-index: 10;
+            transition: transform 0.1s;
+            user-select: none;
+        }
+
+        /* 答案球 */
+        .bubble {
+            position: absolute;
+            width: 80px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.9);
+            border: 4px solid var(--primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 5;
+            cursor: pointer;
+        }
+
+        /* 介面 */
+        #ui-layer {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            pointer-events: none; z-index: 20;
+        }
+        .stats { position: absolute; top: 20px; left: 20px; font-size: 20px; color: #2c3e50; font-weight: bold; pointer-events: auto; background: rgba(255,255,255,0.5); padding: 10px; border-radius: 10px; }
+        
+        #quiz-bar {
+            position: absolute;
+            bottom: 120px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.9);
+            padding: 15px 40px;
+            border-radius: 50px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            border: 3px solid var(--primary);
+            white-space: nowrap;
+        }
+
+        /* 遊戲說明欄 */
+        #instruction-bar {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #34495e;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            text-align: center;
+            width: 80%;
+            max-width: 600px;
+        }
+
+        /* 選單與結束畫面 */
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            color: white;
+            text-align: center;
+        }
+        .btn {
+            background: var(--success);
+            border: none;
+            padding: 15px 40px;
+            color: white;
+            font-size: 24px;
+            border-radius: 50px;
+            cursor: pointer;
+            margin-top: 20px;
+            box-shadow: 0 5px 0 #27ae60;
+        }
+        .btn:active { transform: translateY(3px); box-shadow: none; }
+    </style>
+</head>
+<body onclick="boost()" onkeydown="if(event.code==='Space') boost()">
+
+    <div id="game-container">
+        <div id="dragon">🐉</div>
+
+        <div id="ui-layer">
+            <div class="stats">
+                ❤️ 生命: <span id="hp">3</span> | 🏆 分數: <span id="score">0</span>
+            </div>
+            <div id="quiz-bar">讀取題目中...</div>
+            
+            <div id="instruction-bar">
+                <strong>🕹️ 遊戲方式：</strong><br>
+                手機：點擊螢幕任何地方飛龍就會往上衝！ / 電腦：按【空白鍵】向上飛行。<br>
+                控制飛龍去吃帶有「正確答案」的球，避開錯誤答案。吃錯或撞地會扣血喔！
+            </div>
+        </div>
+    </div>
+
+    <div id="menu" class="overlay">
+        <h1>🐉 飛龍相似字大探險</h1>
+        <p>準備好挑戰 100 題相似字與注音了嗎？</p>
+        <button class="btn" onclick="startGame()">開始飛行</button>
+    </div>
+
+    <script>
+        let allData = [];
+        let currentQ = null;
+        let hp = 3;
+        let score = 0;
+        let dragonY = 300;
+        let velocity = 0;
+        let gravity = 0.4;
+        let isGameOver = false;
+        let bubbles = [];
+        let gameActive = false;
+
+        async function init() {
+            try {
+                const res = await fetch('quiz.json');
+                allData = await res.json();
+            } catch (e) {
+                alert("找不到 quiz.json，請確認檔案在同一個資料夾。");
+            }
+        }
+
+        function startGame() {
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+            resetGame();
+            gameActive = true;
+            requestAnimationFrame(gameLoop);
+            spawnQuiz();
+        }
+
+        function resetGame() {
+            hp = 3; score = 0; dragonY = 300; velocity = 0;
+            isGameOver = false; bubbles = [];
+            const container = document.getElementById('game-container');
+            document.querySelectorAll('.bubble').forEach(b => b.remove());
+            updateUI();
+        }
+
+        function boost() {
+            if(!gameActive || isGameOver) return;
+            velocity = -8;
+            document.getElementById('dragon').style.transform = 'rotate(-20deg)';
+        }
+
+        function spawnQuiz() {
+            if(isGameOver) return;
+            currentQ = allData[Math.floor(Math.random() * allData.length)];
+            document.getElementById('quiz-bar').innerText = currentQ.q;
+            
+            // 產生三個泡泡
+            const container = document.getElementById('game-container');
+            const h = window.innerHeight;
+            const shuffledOptions = [...currentQ.options].sort(() => Math.random() - 0.5);
+            
+            shuffledOptions.forEach((text, i) => {
+                const b = document.createElement('div');
+                b.className = 'bubble';
+                b.innerText = text;
+                b.style.right = '-100px';
+                b.style.top = (h * 0.2) + (i * (h * 0.2)) + 'px'; // 分散高度
+                container.appendChild(b);
+                bubbles.push({
+                    el: b,
+                    x: window.innerWidth,
+                    y: (h * 0.2) + (i * (h * 0.2)),
+                    text: text
+                });
+            });
+        }
+
+        function gameLoop() {
+            if(!gameActive || isGameOver) return;
+
+            // 飛龍物理
+            velocity += gravity;
+            dragonY += velocity;
+            const dragonEl = document.getElementById('dragon');
+            dragonEl.style.top = dragonY + 'px';
+            
+            // 旋轉微調
+            if(velocity > 0) dragonEl.style.transform = 'rotate(10deg)';
+
+            // 邊界檢查
+            if(dragonY < 0 || dragonY > window.innerHeight - 150) {
+                hitError();
+                dragonY = 300;
+                velocity = 0;
+            }
+
+            // 泡泡移動與碰撞
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                let b = bubbles[i];
+                b.x -= (4 + score/10); // 隨分數變快
+                b.el.style.left = b.x + 'px';
+
+                // 碰撞檢測 (簡單矩形檢測)
+                if (b.x < 100 && b.x > 30) {
+                    const dy = dragonY + 25;
+                    if (dy > b.y && dy < b.y + 80) {
+                        checkAnswer(b.text);
+                        clearBubbles();
+                        break;
+                    }
+                }
+
+                // 沒吃到球，飛出螢幕
+                if (b.x < -100) {
+                    clearBubbles();
+                    spawnQuiz();
+                    break;
+                }
+            }
+
+            requestAnimationFrame(gameLoop);
+        }
+
+        function checkAnswer(ans) {
+            if (ans === currentQ.ans) {
+                score++;
+                document.getElementById('quiz-bar').style.color = 'var(--success)';
+                setTimeout(() => {
+                    document.getElementById('quiz-bar').style.color = '#2c3e50';
+                    spawnQuiz();
+                }, 500);
+            } else {
+                hitError();
+                spawnQuiz();
+            }
+            updateUI();
+        }
+
+        function hitError() {
+            hp--;
+            updateUI();
+            document.getElementById('game-container').style.background = '#ffcccc';
+            setTimeout(() => {
+                document.getElementById('game-container').style.background = 'linear-gradient(to bottom, #87CEEB 0%, #E0F6FF 100%)';
+            }, 200);
+            
+            if (hp <= 0) {
+                isGameOver = true;
+                showGameOver();
+            }
+        }
+
+        function clearBubbles() {
+            bubbles.forEach(b => b.el.remove());
+            bubbles = [];
+        }
+
+        function updateUI() {
+            document.getElementById('hp').innerText = hp;
+            document.getElementById('score').innerText = score;
+        }
+
+        function showGameOver() {
+            const menu = document.getElementById('menu');
+            menu.innerHTML = `
+                <h1>💥 墜機啦！</h1>
+                <p>你的飛龍努力辨識了 ${score} 個字！</p>
+                <button class="btn" onclick="location.reload()">再試一次</button>
+            `;
+            menu.style.display = 'flex';
+        }
+
+        init();
+    </script>
+</body>
+</html>
