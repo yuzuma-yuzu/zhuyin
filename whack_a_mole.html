@@ -3,184 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>相似字打地鼠</title>
+    <title>國語相似字大考驗-15題過關版</title>
     <style>
-        :root { --primary: #4CAF50; --secondary: #FFC107; --error: #F44336; }
-        body { margin: 0; padding: 0; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: linear-gradient(to bottom, #8BC34A 0%, #CDDC39 100%); display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+        :root { --primary: #4CAF50; --gold: #FFD700; --error: #F44336; --bg: #2c3e50; }
+        body { margin: 0; padding: 0; overflow: hidden; font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); display: flex; flex-direction: column; align-items: center; }
         
+        #header {
+            width: 100%; height: 60px; background: rgba(0,0,0,0.8);
+            display: flex; justify-content: space-around; align-items: center;
+            color: white; font-size: 20px; font-weight: bold; z-index: 100;
+        }
+
+        #quiz-display {
+            width: 90%; background: white; margin: 15px 0;
+            padding: 15px; border-radius: 15px; border: 4px solid var(--primary);
+            font-size: 32px; font-weight: bold; text-align: center; color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2); min-height: 45px;
+        }
+
         #game-area {
-            position: relative;
-            width: 90vw;
-            max-width: 800px;
-            height: 70vh;
-            max-height: 600px;
-            background: #A1887F; /* 泥土色 */
-            border-radius: 20px;
-            border: 10px solid #795548;
-            box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-around;
-            align-content: space-around;
-            padding: 20px;
-            box-sizing: border-box;
+            position: relative; width: 95vw; max-width: 500px;
+            height: 50vh; background: #8BC34A;
+            border-radius: 20px; border: 8px solid #5D4037;
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 10px; padding: 15px; box-sizing: border-box;
         }
 
         .mole-hole {
-            width: 30%;
-            height: 30%;
-            background: #5D4037; /* 洞口深色 */
-            border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            align-items: flex-end; /* 讓文字從下方冒出 */
-            justify-content: center;
-            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            background: #3E2723; border-radius: 50%;
+            position: relative; overflow: hidden;
+            box-shadow: inset 0 8px 15px rgba(0,0,0,0.6);
         }
 
         .mole-word {
-            position: absolute;
-            bottom: -100%; /* 初始在洞下面 */
-            width: 100%;
-            height: 100%;
-            background: #FFE082; /* 字的背景 */
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            font-weight: bold;
-            color: #333;
-            cursor: pointer;
-            transition: bottom 0.2s ease-out; /* 彈出動畫 */
-            box-shadow: 0 5px 10px rgba(0,0,0,0.2);
-            user-select: none;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            position: absolute; bottom: -100%; width: 100%; height: 100%;
+            background: #FFE082; border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 36px; font-weight: bold; transition: bottom 0.15s ease-out;
+            cursor: pointer; user-select: none;
         }
-        .mole-word.up { bottom: 0; } /* 彈出 */
-        .mole-word.hit { background: var(--success); color: white; transform: scale(0.9); } /* 擊中效果 */
-        .mole-word.miss { background: var(--error); color: white; } /* 錯誤效果 */
+        .mole-word.up { bottom: 0; }
+        .mole-word.hit { background: var(--primary); color: white; }
+        .mole-word.miss { background: var(--error); color: white; }
 
+        #timer-container { width: 90%; height: 12px; background: #eee; border-radius: 6px; margin-top: 15px; overflow: hidden; }
+        #timer-bar { width: 100%; height: 100%; background: var(--gold); }
 
-        #quiz-display {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(255,255,255,0.9);
-            padding: 15px 30px;
-            border-radius: 40px;
-            font-size: 38px;
-            font-weight: bold;
-            color: #333;
-            border: 4px solid var(--primary);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
-            z-index: 100;
-            white-space: nowrap;
-        }
-
-        #stats {
-            position: absolute;
-            top: 100px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0,0,0,0.7);
-            color: white;
-            padding: 8px 20px;
-            border-radius: 15px;
-            font-size: 24px;
-            z-index: 100;
-            display: flex;
-            gap: 20px;
-        }
-
-        #timer-bar {
-            position: absolute;
-            bottom: 10px;
-            left: 5%;
-            width: 90%;
-            height: 20px;
-            background: #eee;
-            border-radius: 10px;
-            overflow: hidden;
-            z-index: 100;
-        }
-        #time-remaining {
-            width: 100%;
-            height: 100%;
-            background: var(--secondary);
-            transition: width linear;
+        #instruction {
+            width: 90%; margin-top: 15px; padding: 12px;
+            background: rgba(255,255,255,0.1); color: #ddd;
+            border-radius: 10px; font-size: 15px; line-height: 1.6;
         }
 
         .overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.9); display: flex; flex-direction: column;
-            align-items: center; justify-content: center; z-index: 200; color: white;
-            text-align: center;
+            align-items: center; justify-content: center; z-index: 200; color: white; text-align: center;
         }
-        .btn { background: var(--primary); border: none; padding: 15px 40px; color: white; font-size: 28px; border-radius: 50px; cursor: pointer; margin-top: 20px; }
-        .btn:hover { background: #5cb85c; }
+        .btn { background: var(--primary); border: none; padding: 15px 50px; color: white; font-size: 26px; border-radius: 50px; cursor: pointer; margin-top: 20px; }
     </style>
 </head>
 <body>
+
+    <div id="header">
+        <div>🚩 關卡: <span id="level-name">L7-L9</span></div>
+        <div>❤️ 生命: <span id="hp-ui">3</span></div>
+        <div>🏆 進度: <span id="count-ui">0</span>/15</div>
+    </div>
+
+    <div id="quiz-display">準備挑戰...</div>
+
     <div id="game-area">
-        <div id="quiz-display">載入中...</div>
-        <div id="stats">
-            <span>❤️ <span id="hp">3</span></span>
-            <span>🏆 <span id="score">0</span></span>
-        </div>
-
-        <div class="mole-hole" id="hole-0"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-1"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-2"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-3"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-4"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-5"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-6"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-7"><div class="mole-word"></div></div>
-        <div class="mole-hole" id="hole-8"><div class="mole-word"></div></div>
-        
-        <div id="timer-bar"><div id="time-remaining"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
+        <div class="mole-hole"><div class="mole-word"></div></div>
     </div>
 
-    <div id="menu" class="overlay">
-        <h1>相似字打地鼠</h1>
-        <p style="font-size: 22px;">在限時內點擊正確的字或注音！</p>
-        <button class="btn" onclick="startGame()">開始遊戲</button>
+    <div id="timer-container"><div id="timer-bar"></div></div>
+
+    <div id="instruction">
+        <strong>📝 操作說明：</strong><br>
+        1. 看上方題目：判斷正確的字或注音。<br>
+        2. 點擊地鼠：從彈出的地鼠中找出正確答案並點擊。<br>
+        3. 每關只需答對 <strong>15 題</strong> 即可過關！<br>
     </div>
 
-    <div id="game-over-screen" class="overlay" style="display:none;">
-        <h1>遊戲結束！</h1>
-        <p style="font-size: 28px;">你共打對了 <span id="final-score">0</span> 題。</p>
-        <button class="btn" onclick="location.reload()">再玩一次</button>
+    <div id="overlay-screen" class="overlay">
+        <h1 id="overlay-title">相似字打地鼠</h1>
+        <p id="overlay-desc">第一關：第 7 課至第 9 課</p>
+        <button class="btn" id="start-btn" onclick="handleStart()">開始挑戰</button>
     </div>
 
     <script>
         let allData = [];
         let currentQuiz = null;
         let hp = 3;
-        let score = 0;
+        let scoreInLevel = 0;
+        let currentLevelNum = 1; 
         let gameActive = false;
-        let moleWords = []; // 儲存地鼠洞裡的字元素
+        let moleWords = [];
         let timerInterval;
-        let roundTime = 5; // 每題的作答時間 (秒)
-        let timeRemaining = roundTime;
 
         async function init() {
             try {
                 const res = await fetch('quiz.json');
                 allData = await res.json();
                 moleWords = Array.from(document.querySelectorAll('.mole-word'));
-            } catch (e) {
-                alert("讀取 quiz.json 失敗，請確認檔案在同一個資料夾。");
-            }
+            } catch (e) { alert("讀取題庫失敗！"); }
         }
 
-        function startGame() {
-            document.getElementById('menu').style.display = 'none';
-            document.getElementById('game-area').style.display = 'flex';
-            hp = 3; score = 0; updateStats();
+        function handleStart() {
+            if (currentLevelNum === 1 || hp <= 0) {
+                hp = 3; scoreInLevel = 0;
+            } else {
+                scoreInLevel = 0;
+            }
+            document.getElementById('overlay-screen').style.display = 'none';
+            updateUI();
             gameActive = true;
             nextRound();
         }
@@ -188,109 +134,109 @@
         function nextRound() {
             if (!gameActive) return;
 
-            // 清理上一輪的字
-            moleWords.forEach(mw => {
-                mw.classList.remove('up', 'hit', 'miss');
-                mw.innerText = '';
-            });
-            clearTimeout(timerInterval); // 清除舊的計時器
+            // 門檻調整為 15 題
+            if (scoreInLevel >= 15) {
+                if (currentLevelNum === 1) { winLevel1(); } else { winGame(); }
+                return;
+            }
 
-            currentQuiz = allData[Math.floor(Math.random() * allData.length)];
+            moleWords.forEach(mw => mw.classList.remove('up', 'hit', 'miss'));
+            cancelAnimationFrame(timerInterval);
+
+            const pool = allData.filter(d => d.level === currentLevelNum);
+            currentQuiz = pool[Math.floor(Math.random() * pool.length)];
             document.getElementById('quiz-display').innerText = currentQuiz.q;
 
             const shuffledOptions = [...currentQuiz.options].sort(() => Math.random() - 0.5);
-            const selectedHoles = [];
-            
-            // 隨機選3個洞彈出
-            while(selectedHoles.length < 3) {
-                const randomIndex = Math.floor(Math.random() * moleWords.length);
-                if (!selectedHoles.includes(randomIndex)) {
-                    selectedHoles.push(randomIndex);
-                }
+            const holes = [];
+            while(holes.length < 3) {
+                let r = Math.floor(Math.random() * 9);
+                if(!holes.includes(r)) holes.push(r);
             }
 
-            selectedHoles.forEach((holeIndex, i) => {
-                const wordEl = moleWords[holeIndex];
-                wordEl.innerText = shuffledOptions[i];
-                wordEl.onclick = () => handleMoleClick(wordEl, shuffledOptions[i]);
-                setTimeout(() => wordEl.classList.add('up'), 100 + i * 100); // 錯開彈出
+            holes.forEach((hIndex, i) => {
+                const mw = moleWords[hIndex];
+                mw.innerText = shuffledOptions[i];
+                mw.onclick = () => checkAns(mw, shuffledOptions[i]);
+                setTimeout(() => mw.classList.add('up'), 50);
             });
-            
+
             startTimer();
         }
 
-        function handleMoleClick(clickedWordEl, clickedText) {
-            if (!gameActive || clickedWordEl.classList.contains('hit') || clickedWordEl.classList.contains('miss')) return;
-
-            if (clickedText === currentQuiz.ans) {
-                score++;
-                clickedWordEl.classList.add('hit');
-                // 答對音效可以加這裡
-                setTimeout(nextRound, 500); // 答對後快速進入下一題
+        function checkAns(el, text) {
+            if (el.classList.contains('hit') || el.classList.contains('miss')) return;
+            if (text === currentQuiz.ans) {
+                scoreInLevel++;
+                el.classList.add('hit');
+                setTimeout(nextRound, 300);
             } else {
                 hp--;
-                clickedWordEl.classList.add('miss');
-                // 答錯音效可以加這裡
-                updateStats();
-                if (hp <= 0) {
-                    gameOver();
-                } else {
-                    // 錯了不馬上換題，讓玩家看到正確答案
-                    setTimeout(() => {
-                        moleWords.forEach(mw => {
-                            if (mw.innerText === currentQuiz.ans) {
-                                mw.classList.add('hit'); // 顯示正確答案
-                            }
-                        });
-                        setTimeout(nextRound, 1000); // 錯了等1秒後換題
-                    }, 300);
-                }
+                el.classList.add('miss');
+                flashRed();
+                if (hp <= 0) gameOver();
+                else setTimeout(nextRound, 800);
             }
+            updateUI();
         }
 
         function startTimer() {
-            timeRemaining = roundTime - (score / 20); // 分數越高，時間越短
-            if (timeRemaining < 2) timeRemaining = 2; // 最少2秒
-            document.getElementById('time-remaining').style.width = '100%';
-            clearTimeout(timerInterval);
-
-            const startTime = Date.now();
-            const updateBar = () => {
-                const elapsed = (Date.now() - startTime) / 1000;
-                const remaining = Math.max(0, timeRemaining - elapsed);
-                document.getElementById('time-remaining').style.width = `${(remaining / timeRemaining) * 100}%`;
+            const timeLimit = currentLevelNum === 1 ? 7000 : 5000; 
+            let start = Date.now();
+            const animate = () => {
+                let now = Date.now();
+                let remaining = Math.max(0, timeLimit - (now - start));
+                document.getElementById('timer-bar').style.width = (remaining / timeLimit) * 100 + "%";
                 if (remaining <= 0) {
-                    // 時間到，沒打中
                     hp--;
-                    updateStats();
-                    if (hp <= 0) {
-                        gameOver();
-                    } else {
-                        // 時間到沒打中，顯示正確答案再換題
-                        moleWords.forEach(mw => {
-                            if (mw.innerText === currentQuiz.ans) {
-                                mw.classList.add('hit');
-                            }
-                        });
-                        setTimeout(nextRound, 1000);
-                    }
+                    updateUI();
+                    if (hp <= 0) gameOver(); else nextRound();
                 } else {
-                    timerInterval = requestAnimationFrame(updateBar);
+                    timerInterval = requestAnimationFrame(animate);
                 }
             };
-            timerInterval = requestAnimationFrame(updateBar);
+            timerInterval = requestAnimationFrame(animate);
         }
 
-        function updateStats() {
-            document.getElementById('hp').innerText = hp;
-            document.getElementById('score').innerText = score;
+        function updateUI() {
+            document.getElementById('hp-ui').innerText = hp;
+            document.getElementById('count-ui').innerText = scoreInLevel;
+            document.getElementById('level-name').innerText = currentLevelNum === 1 ? "L7-L9" : "L10-L12";
+        }
+
+        function flashRed() {
+            document.body.style.background = "#8e241c";
+            setTimeout(() => document.body.style.background = "#2c3e50", 150);
+        }
+
+        function winLevel1() {
+            gameActive = false;
+            currentLevelNum = 2;
+            const screen = document.getElementById('overlay-screen');
+            document.getElementById('overlay-title').innerText = "🎉 L7-L9 挑戰成功！";
+            document.getElementById('overlay-desc').innerText = "下一關：L10-L12\n準備好了嗎？";
+            document.getElementById('start-btn').innerText = "進入第二關";
+            screen.style.display = 'flex';
+        }
+
+        function winGame() {
+            gameActive = false;
+            const screen = document.getElementById('overlay-screen');
+            document.getElementById('overlay-title').innerText = "🏆 完美全通關！";
+            document.getElementById('overlay-desc').innerText = "L7-L12 的字辨與注音都難不倒你了！";
+            document.getElementById('start-btn').innerText = "再玩一次";
+            currentLevelNum = 1;
+            screen.style.display = 'flex';
         }
 
         function gameOver() {
             gameActive = false;
-            clearTimeout(timerInterval);
-            document.getElementById('final-score').innerText = score;
-            document.getElementById('game-over-screen').style.display = 'flex';
+            cancelAnimationFrame(timerInterval);
+            const screen = document.getElementById('overlay-screen');
+            document.getElementById('overlay-title').innerText = "👻 再接再厲";
+            document.getElementById('overlay-desc').innerText = "差一點就過關了，再試一次吧！";
+            document.getElementById('start-btn').innerText = "重新挑戰";
+            screen.style.display = 'flex';
         }
 
         init();
